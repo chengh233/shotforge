@@ -36,6 +36,12 @@ new folder under `projects/`.
 - Wan specifics handled in `load_pipe`: VAE + image_encoder forced to fp32, UniPC
   `flow_shift` (5.0@720P / 3.0@480P), 16fps (the trained rate). 14B bf16 (~28GB)
   wants a 40GB+ GPU resident; smaller cards auto cpu-offload (`$I2V_OFFLOAD`).
+- Speed: 720P 14B is heavy (~75k attention tokens). For iteration use
+  `model: wan-480p` + fewer `steps`. Knobs: `$I2V_COMPILE=1` (or `=max-autotune`)
+  `torch.compile`s the transformer (~1.5-2x after a slow first run);
+  `$I2V_ATTN=flash` forces the fused attention kernels (and proves whether
+  attention was silently using the slow math fallback). `load_pipe` prints the
+  enabled SDP backends.
 - Class drift: `load_pipe` prints the installed diffusers' I2V class names if a
   backend's `pipeline_cls` is wrong.
 

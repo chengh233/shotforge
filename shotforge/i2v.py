@@ -11,6 +11,7 @@ Memory strategy is chosen by VRAM: big GPUs (>=40GB) keep the model resident
 """
 from __future__ import annotations
 
+import contextlib
 import importlib
 import os
 
@@ -112,6 +113,17 @@ def load_pipe(backend: Backend):
             print(f"[warn] could not set flow_shift: {exc}")
 
     if device == "cuda":
+        # Prefer the fused attention kernels (flash / mem-efficient) over the
+        # O(n^2) math fallback — a silent fallback to math is a common cause of
+        # slow video attention. They're on by default; we set + report them so a
+        # fallback is visible (force the fast path per-call with $I2V_ATTN=flash).
+        torch.backends.cuda.enable_flash_sdp(True)
+        torch.backends.cuda.enable_mem_efficient_sdp(True)
+        print(
+            f"[attn] sdp: flash={torch.backends.cuda.flash_sdp_enabled()} "
+            f"mem_efficient={torch.backends.cuda.mem_efficient_sdp_enabled()} "
+            f"math={torch.backends.cuda.math_sdp_enabled()}"
+        )
         if _should_offload():
             # Stream weights through VRAM instead of pinning the whole model.
             pipe.enable_model_cpu_offload()
@@ -129,6 +141,18 @@ def load_pipe(backend: Backend):
             print("[mem] model resident on cuda (no offload)")
     else:
         pipe.to(device)
+
+    # Optionally compile the per-step denoiser. The first call pays a (minutes-
+    # long) compile cost; steady-state steps then run ~1.5-2x faster. Best with
+    # the model resident (no offload). $I2V_COMPILE=1 uses default mode;
+    # $I2V_COMPILE=max-autotune compiles harder. Recompiles when a shot's
+    # frame count / resolution changes.
+    compile_mode = os.environ.get("I2V_COMPILE")
+    if compile_mode and compile_mode.lower() not in ("0", "false", "off") \
+            and getattr(pipe, "transformer", None) is not None:
+        mode = "default" if compile_mode.lower() in ("1", "true", "on") else compile_mode
+        pipe.transformer = torch.compile(pipe.transformer, mode=mode)
+        print(f"[compile] torch.compile(transformer, mode={mode}) — first run compiles, then faster")
 
     _PIPE, _PIPE_KEY = pipe, key
     return _PIPE
@@ -156,14 +180,29 @@ def generate(
     gen_device = "cpu" if device == "mps" else device
     generator = torch.Generator(device=gen_device).manual_seed(seed)
 
-    result = pipe(
-        image=image,
-        prompt=prompt,
-        negative_prompt=negative,
-        width=width,
-        height=height,
-        num_frames=num_frames,
-        num_inference_steps=steps,
-        generator=generator,
-    )
+    # $I2V_ATTN=flash forces the fast attention kernels and EXCLUDES the math
+    # fallback: if generation runs it confirms flash/efficient handled the
+    # shapes; if it errors, math was the only option (i.e. attention was the
+    # slow path). Default: leave PyTorch to pick.
+    attn_ctx: contextlib.AbstractContextManager = contextlib.nullcontext()
+    if device == "cuda" and os.environ.get("I2V_ATTN", "").lower() in ("flash", "fast", "efficient"):
+        try:
+            from torch.nn.attention import SDPBackend, sdpa_kernel
+
+            attn_ctx = sdpa_kernel([SDPBackend.FLASH_ATTENTION, SDPBackend.EFFICIENT_ATTENTION])
+            print("[attn] forcing flash/efficient SDPA (math fallback disabled)")
+        except Exception as exc:  # old torch without sdpa_kernel list support
+            print(f"[warn] could not force sdpa backend: {exc}")
+
+    with attn_ctx:
+        result = pipe(
+            image=image,
+            prompt=prompt,
+            negative_prompt=negative,
+            width=width,
+            height=height,
+            num_frames=num_frames,
+            num_inference_steps=steps,
+            generator=generator,
+        )
     return result.frames[0]
