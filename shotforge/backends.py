@@ -34,6 +34,13 @@ class Backend:
     # default_width*default_height as the area budget (the official Wan I2V
     # approach). Off-aspect/off-bucket dims cause distortion, so prefer this.
     auto_resolution: bool = False
+    # Components to load explicitly (matching the model's official example)
+    # instead of letting from_pretrained auto-pick. Wan I2V needs its CLIP
+    # image_encoder loaded as CLIPVisionModel — auto-load gives
+    # CLIPVisionModelWithProjection, which conditions the model wrong and the
+    # scene drifts/melts after the first frame. See i2v.load_pipe.
+    vae_cls: str | None = None            # diffusers class, e.g. "AutoencoderKLWan"
+    image_encoder_cls: str | None = None  # transformers class, e.g. "CLIPVisionModel"
     # Which prompt language the text encoder was trained for. Informational
     # (surfaced in logs/docs, not enforced). See docs/PIPELINE.md.
     prompt_lang: str = "en"
@@ -57,6 +64,8 @@ BACKENDS: dict[str, Backend] = {
         default_fps=16,
         flow_shift=5.0,       # 5.0 for 720P
         auto_resolution=True, # derive W/H from the image aspect (Wan I2V)
+        vae_cls="AutoencoderKLWan",
+        image_encoder_cls="CLIPVisionModel",
         prompt_lang="zh+en",
     ),
     # Same model family at 480P — lighter/faster, for quick draft renders.
@@ -73,6 +82,8 @@ BACKENDS: dict[str, Backend] = {
         default_fps=16,
         flow_shift=3.0,       # 3.0 for 480P
         auto_resolution=True, # derive W/H from the image aspect (Wan I2V)
+        vae_cls="AutoencoderKLWan",
+        image_encoder_cls="CLIPVisionModel",
         prompt_lang="zh+en",
     ),
     # LTX-Video — light, fast, English-centric (T5 text encoder). Good for quick

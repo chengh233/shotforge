@@ -84,21 +84,36 @@ def load_pipe(backend: Backend):
 
     PipelineClass = _resolve_pipeline_class(backend.pipeline_cls)
     device, dtype = device_dtype()
+    vae_fp32 = os.environ.get("I2V_VAE_DTYPE", "fp32").lower() in ("fp32", "float32")
     print(f"[model] {backend.name}: {backend.pipeline_cls} <- {model_id}")
-    # from_pretrained pulls every component listed in the repo (for Wan I2V that
-    # includes the CLIP image_encoder), so a plain load is enough.
-    pipe = PipelineClass.from_pretrained(model_id, torch_dtype=dtype)
 
-    # Video VAEs are precision-sensitive: in fp16/bf16 the temporal decode can
-    # overflow to NaN, leaving every frame after the first one blank. Decode the
-    # VAE (and Wan's CLIP image_encoder) in fp32. Set $I2V_VAE_DTYPE=bf16 to
-    # trade it back for memory once you've confirmed clean decodes.
-    if os.environ.get("I2V_VAE_DTYPE", "fp32").lower() in ("fp32", "float32"):
-        if getattr(pipe, "vae", None) is not None:
-            pipe.vae.to(torch.float32)
-            print("[vae] dtype=float32 (set I2V_VAE_DTYPE=bf16 to use the model dtype)")
-        if getattr(pipe, "image_encoder", None) is not None:
-            pipe.image_encoder.to(torch.float32)
+    # Load the components the model's official example loads explicitly, rather
+    # than letting from_pretrained auto-pick. For Wan I2V this matters: auto-load
+    # gives the image_encoder as CLIPVisionModelWithProjection, whose embeddings
+    # condition the model wrong — the scene drifts/melts after the first frame.
+    # Loading it as CLIPVisionModel (+ the matching VAE) mirrors the doc example.
+    from_kwargs: dict = {"torch_dtype": dtype}
+    if backend.vae_cls:
+        import diffusers as _diffusers
+
+        from_kwargs["vae"] = getattr(_diffusers, backend.vae_cls).from_pretrained(
+            model_id, subfolder="vae", torch_dtype=torch.float32 if vae_fp32 else dtype
+        )
+    if backend.image_encoder_cls:
+        import transformers as _transformers
+
+        from_kwargs["image_encoder"] = getattr(_transformers, backend.image_encoder_cls).from_pretrained(
+            model_id, subfolder="image_encoder", torch_dtype=torch.float32
+        )
+        print(f"[img-enc] explicit {backend.image_encoder_cls} (fp32)")
+
+    pipe = PipelineClass.from_pretrained(model_id, **from_kwargs)
+
+    # Video VAEs overflow to NaN in fp16/bf16 (blank frames); keep the VAE in
+    # fp32. Set $I2V_VAE_DTYPE=bf16 to trade it back for memory.
+    if vae_fp32 and getattr(pipe, "vae", None) is not None:
+        pipe.vae.to(torch.float32)
+        print("[vae] dtype=float32 (set I2V_VAE_DTYPE=bf16 to use the model dtype)")
 
     # Wan recommends a resolution-dependent flow shift on a UniPC scheduler.
     if backend.flow_shift is not None:
