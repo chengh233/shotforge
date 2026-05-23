@@ -46,12 +46,13 @@ def main() -> None:
                 fh.write(f"file '{os.path.abspath(clip)}'\n")
 
         base = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path]
-        print(f"[stitch] {len(clips)} clips -> {out} (stream copy)")
-        try:
-            subprocess.run(base + ["-c", "copy", out], check=True)
-        except subprocess.CalledProcessError:
-            print("[stitch] stream copy failed; re-encoding")
-            subprocess.run(base + ["-c:v", "libx264", "-pix_fmt", "yuv420p", out], check=True)
+        # Always re-encode. Concat stream-copy (`-c copy`) can silently produce a
+        # file that plays only the first clip — the others go blank — because the
+        # per-clip timestamps don't line up, and it exits 0 so a fallback never
+        # fires. Re-encoding normalizes timestamps + pixfmt and stays
+        # browser/QuickTime friendly.
+        print(f"[stitch] {len(clips)} clips -> {out} (re-encode)")
+        subprocess.run(base + ["-c:v", "libx264", "-pix_fmt", "yuv420p", out], check=True)
         print(f"[ok] {out}")
     finally:
         os.unlink(list_path)

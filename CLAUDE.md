@@ -33,9 +33,12 @@ new folder under `projects/`.
 - Wan's text encoder is umT5 (multilingual) → Chinese motion prompts work; LTX's
   T5 wants English. These models output **silent video, no subtitles**
   (post-process separately — see `docs/PIPELINE.md`).
-- Wan specifics handled in `load_pipe`: VAE + image_encoder forced to fp32, UniPC
-  `flow_shift` (5.0@720P / 3.0@480P), 16fps (the trained rate). 14B bf16 (~28GB)
-  wants a 40GB+ GPU resident; smaller cards auto cpu-offload (`$I2V_OFFLOAD`).
+- Wan specifics: VAE + image_encoder forced to fp32, UniPC `flow_shift`
+  (5.0@720P / 3.0@480P), 16fps (the trained rate), and `auto_resolution` derives
+  W/H from the starting image's aspect within `default_width*default_height` as
+  an area budget — **don't hardcode dims**, off-aspect/off-bucket sizes distort.
+  14B bf16 (~28GB) wants a 40GB+ GPU resident; smaller cards auto cpu-offload
+  (`$I2V_OFFLOAD`).
 - Speed: 720P 14B is heavy (~75k attention tokens). For iteration use
   `model: wan-480p` + fewer `steps`. Knobs: `$I2V_COMPILE=1` (or `=max-autotune`)
   `torch.compile`s the transformer (~1.5-2x after a slow first run);
@@ -69,6 +72,13 @@ python -m tools.last_frame   --video <clip>.mp4 --out <next>.png
   `image_encoder` (Wan2.1-I2V-14B-480P/720P). Wan2.2-TI2V-5B has no image_encoder
   and its I2V is broken in diffusers — don't use it here. Other causes: VAE NaN
   in low precision (fp32 is the default) or VAE tiling (off by default).
+- **Frames distort / melt as the clip progresses** — usually too much motion for
+  the scene (ambitious camera moves on a cluttered frame), off-bucket resolution
+  (rely on `auto_resolution`, don't hardcode dims), or too few `steps`. Subtle
+  motion prompts + cleaner frames + ~50 steps hold together far better.
+- **Stitched video plays only the first clip** — `tools/stitch.py` now always
+  re-encodes; concat `-c copy` can silently emit a file where later clips go
+  blank. Don't reintroduce the stream-copy path.
 - **Frame not found** — frame paths in `project.yaml` are relative to the
   project dir; `load_project` joins them. Check `--project` points at the right
   folder.

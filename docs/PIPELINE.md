@@ -198,6 +198,7 @@ flowchart LR
 | **CUDA OOM（显存爆）** | 14B 太大放不下；分辨率/时长太大 | `load_pipe` 按显存自动 offload（`$I2V_OFFLOAD=1` 强制）；降 `width`/`height`/`seconds`；用 `model: wan-480p` |
 | **只有第一帧、之后空白** | I2V 用错模型（如 TI2V-5B 没 image_encoder）；或 VAE 精度 | 用 `wan`/`wan-480p`（=正经 I2V-14B）；VAE 默认已 fp32，`$I2V_VAE_TILING` 保持不设 |
 | **画面糊 / 崩坏 / 扭曲** | 帧数或尺寸不合法；步数太低 | 别手写帧数/尺寸（交给 `frames_for`/`snap_dim`）；`steps` 提到 40–50 |
+| **运动中前景融化、越往后越崩** | 动作太猛 + 画面太杂；分辨率非标准档 | 提示词改「基本静止 + 细微动作」；靠 Wan 的 auto_resolution（别写死尺寸）；定稿 50 步；起始帧别太杂 |
 | **起始帧被"重画"、不像原图** | 提示词描述了与起始帧冲突的内容 | 提示词**只写运动/镜头**（怎么动、怎么推拉摇移），别重新描述画面内容 |
 | **画面被拉伸** | 起始帧比例 ≠ `width:height` | 出图按 9:16；或改 `width/height` 去匹配起始帧比例 |
 | **人物变形 / 多手多脚** | 模型固有问题；negative 不够 | 加强 `negative`（deformed, extra limbs, …）；换 `seed`；减少剧烈运动描述 |

@@ -176,6 +176,22 @@ def generate(
     device, _ = device_dtype()
 
     image = load_image(frame_path)
+
+    # Wan I2V wants dims derived from the image's aspect ratio within an area
+    # budget (width*height), snapped to the patch grid — feeding off-aspect or
+    # off-bucket dims warps/melts the output. Resize the image to match.
+    if backend.auto_resolution:
+        max_area = width * height
+        ar = image.height / image.width
+        mod = backend.dim_multiple
+        new_h = max(mod, int(round((max_area * ar) ** 0.5)) // mod * mod)
+        new_w = max(mod, int(round((max_area / ar) ** 0.5)) // mod * mod)
+        if (new_w, new_h) != (width, height):
+            print(f"[res] auto {width}x{height} (area) -> {new_w}x{new_h} "
+                  f"for image {image.width}x{image.height}")
+        width, height = new_w, new_h
+        image = image.resize((width, height))
+
     # mps has no Generator implementation; seed on cpu there.
     gen_device = "cpu" if device == "mps" else device
     generator = torch.Generator(device=gen_device).manual_seed(seed)

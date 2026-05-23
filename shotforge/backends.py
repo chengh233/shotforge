@@ -30,6 +30,10 @@ class Backend:
     default_steps: int = 40
     default_fps: int = 24      # the fps the model was trained at (Wan 2.1 = 16)
     flow_shift: float | None = None   # UniPC scheduler shift (Wan: 3.0@480P/5.0@720P)
+    # Derive the actual W/H from the starting image's aspect ratio, using
+    # default_width*default_height as the area budget (the official Wan I2V
+    # approach). Off-aspect/off-bucket dims cause distortion, so prefer this.
+    auto_resolution: bool = False
     # Which prompt language the text encoder was trained for. Informational
     # (surfaced in logs/docs, not enforced). See docs/PIPELINE.md.
     prompt_lang: str = "en"
@@ -52,6 +56,7 @@ BACKENDS: dict[str, Backend] = {
         default_steps=40,
         default_fps=16,
         flow_shift=5.0,       # 5.0 for 720P
+        auto_resolution=True, # derive W/H from the image aspect (Wan I2V)
         prompt_lang="zh+en",
     ),
     # Same model family at 480P — lighter/faster, for quick draft renders.
@@ -67,6 +72,7 @@ BACKENDS: dict[str, Backend] = {
         default_steps=40,
         default_fps=16,
         flow_shift=3.0,       # 3.0 for 480P
+        auto_resolution=True, # derive W/H from the image aspect (Wan I2V)
         prompt_lang="zh+en",
     ),
     # LTX-Video — light, fast, English-centric (T5 text encoder). Good for quick
