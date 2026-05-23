@@ -1,5 +1,7 @@
 # shotforge
 
+**English** · [简体中文](./README.zh.md)
+
 A minimal, script-agnostic **image-to-video pipeline for short dramas (短剧)**.
 
 You author scripts and prepare starting-frame images locally (e.g. on a Mac),
