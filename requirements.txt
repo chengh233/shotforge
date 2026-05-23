@@ -13,3 +13,4 @@ imageio-ffmpeg
 av
 pyyaml
 sentencepiece
+ftfy            # Wan's pipeline uses it to clean/normalize prompts (incl. CJK)
