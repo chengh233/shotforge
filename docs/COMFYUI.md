@@ -32,16 +32,18 @@ bash scripts/comfyui_setup.sh
 ```
 脚本会：clone ComfyUI、装依赖、把 4 个模型文件下到正确目录、下载官方工作流到 `/content/wan2_2_i2v_workflow.json`。
 
-下载的文件与位置：
+下载的文件与位置（**官方 I2V 模板用的是 fp8 模型 + 4 步 Lightning LoRA**，不是 fp16）：
 
 | 文件 | 目录 |
 |---|---|
-| `wan2.2_i2v_high_noise_14B_fp16.safetensors` | `ComfyUI/models/diffusion_models/` |
-| `wan2.2_i2v_low_noise_14B_fp16.safetensors` | `ComfyUI/models/diffusion_models/` |
+| `wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors` | `ComfyUI/models/diffusion_models/` |
+| `wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors` | `ComfyUI/models/diffusion_models/` |
 | `umt5_xxl_fp8_e4m3fn_scaled.safetensors` | `ComfyUI/models/text_encoders/` |
 | `wan_2.1_vae.safetensors` | `ComfyUI/models/vae/` |
+| `wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors` | `ComfyUI/models/loras/` |
+| `wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors` | `ComfyUI/models/loras/` |
 
-> Wan 2.2 是 MoE：**高噪 + 低噪两个 14B 专家**，ComfyUI 会在采样中自动切换。A14B 不需要单独的 CLIP vision 模型（和 2.1 不同）。80GB A100 靠 ComfyUI 的原生 offloading 跑得动。
+> Wan 2.2 是 MoE：**高噪 + 低噪两个 14B 专家**，ComfyUI 会在采样中自动切换。A14B 不需要单独的 CLIP vision 模型（和 2.1 不同）。官方模板配 **lightx2v 4 步 Lightning LoRA**——4 步出片、又快又好。**新加模型后必须重启 ComfyUI**（或界面里刷新）才能扫描到，否则报 "required models are missing / Value not in list"。
 
 ### 2. 启动 ComfyUI 服务
 在一个**后台 cell / 单独终端**里（要一直开着）：
