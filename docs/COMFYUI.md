@@ -72,16 +72,33 @@ cloudflared tunnel --url http://localhost:8188
 
 ---
 
-## Phase 2：shotforge 通过 API 调 ComfyUI（待 Phase 1 验证后做）
+## Phase 2：shotforge 通过 API 调 ComfyUI（已实现）
 
-思路：保留 `project.yaml` / 批量 / `tools.stitch`，把渲染后端从 diffusers 换成「调 ComfyUI 的 HTTP API」：
+`shotforge/comfy.py` + `generate.py --engine comfy` 已接好——保留 `project.yaml` /
+批量 / `tools.stitch`，渲染走 ComfyUI。
 
-1. 把 Phase 1 验证好的工作流导出为 **API 格式 JSON**（ComfyUI 设置里开 "Enable Dev mode Options" → Save (API Format)）。存进 `projects/` 或 `shotforge/`。
-2. 新增一个 `shotforge/comfy.py`：读该 workflow JSON，按每个镜头**注入** start image / prompt / 帧数 / 尺寸 / seed，POST 到 `http://127.0.0.1:8188/prompt`，轮询 `/history/{id}`，取回输出帧/mp4。
-3. `generate.py` 增加一个 `--backend comfy`（或在 `project.yaml` 加 `engine: comfy`），走 ComfyUI 而非 diffusers。
-4. ComfyUI 和 shotforge 在**同一台 Colab**上，所以用 `localhost:8188`，不需要隧道（隧道只是给你的 Mac 浏览器看 GUI 用的）。
+**用法**（在 Colab 上，ComfyUI 服务要在跑）：
+```bash
+# 一个 cell 保持运行 ComfyUI 服务：
+python /content/ComfyUI/main.py --listen 0.0.0.0 --port 8188
 
-> Phase 2 是一段代码活，依赖 Phase 1 跑通后导出的**确切 API workflow JSON**（节点 id 要对上才能注入参数）。**先把 Phase 1 跑通、把那个 API JSON 发我，我来写 `shotforge/comfy.py` 和接线。**
+# shotforge 调它渲染（同机，用 localhost，不需要隧道）：
+python -m shotforge.generate --project projects/example --engine comfy --shot s1   # 单镜
+python -m shotforge.generate --project projects/example --engine comfy             # 全部
+python -m tools.stitch       --project projects/example                            # 拼接
+```
+
+对每个镜头：上传起始帧 → 把 prompt/negative/宽高/时长/fps/seed 注入
+`comfyui/wan_i2v_api.json` → `POST /prompt` → 轮询 `/history` → 下载 mp4 到 `out/`。
+
+**注意**：
+- 工作流文件 `comfyui/wan_i2v_api.json`（ComfyUI 导出的 API 格式）。注入用的节点 id 写在
+  `shotforge/comfy.py` 顶部的 `NODE_*`。**重新导出过改动的工作流后**节点 id 可能变，跑
+  `python -m shotforge.comfy comfyui/wan_i2v_api.json` 打印所有节点对照更新。
+- 默认 `--comfy-url http://127.0.0.1:8188`、`--workflow comfyui/wan_i2v_api.json`。
+- 当前工作流是 **20 步高质量**路径（`Enable 4steps LoRA?=False`）。想 4 步快出，在 ComfyUI
+  里打开那个开关、重新导出 API JSON 覆盖即可。
+- 尺寸按起始帧长宽比自动推导（用 `project.yaml` 里 model 的面积预算），注入 WanImageToVideo。
 
 ---
 

@@ -20,10 +20,15 @@ new folder under `projects/`.
 - `tools/last_frame.py` — export a clip's last frame for chaining.
 - `projects/<name>/` — one script: `project.yaml` + `frames/` + `out/`.
 - `docs/PIPELINE.md` — how a video is generated end-to-end + a debug guide.
-- `docs/COMFYUI.md` + `scripts/comfyui_setup.sh` — the ComfyUI rendering backend
-  (plan B). diffusers' Wan I2V melts/garbles (a known diffusers limitation we
-  hit repeatedly); the high-quality path is ComfyUI. shotforge stays the
-  orchestrator and will call ComfyUI's HTTP API for rendering (Phase 2).
+- `shotforge/comfy.py` — `engine: comfy`. Drives a running ComfyUI server over
+  HTTP (upload frame → inject params into `comfyui/wan_i2v_api.json` → queue →
+  download mp4). The high-quality Wan path; diffusers' Wan I2V melts/garbles (a
+  known diffusers limitation we hit repeatedly).
+  Run: `python -m shotforge.generate --project <p> --engine comfy`.
+- `docs/COMFYUI.md` + `scripts/comfyui_setup.sh` — ComfyUI install on the GPU box
+  (Colab) + Wan 2.2 I2V models + the rendering-backend guide (plan B).
+- `comfyui/wan_i2v_api.json` — the exported ComfyUI API workflow `comfy.py`
+  drives; `NODE_*` ids in `comfy.py` index into it (re-check if you re-export).
 
 ## Models
 - A project picks its model with the top-level `model:` field in `project.yaml`
