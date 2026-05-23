@@ -1,34 +1,48 @@
-# A shotforge project = ONE short-drama script.
+# 一个 shotforge 项目 = 一部短剧。
 #
-# To start a new episode/script, copy this whole folder:
+# 新建一部短剧：复制整个文件夹
 #     cp -r projects/example projects/ep01
-# then edit the fields below and drop your starting-frame PNGs into frames/.
-# Frame images can be exported from Dreamina (or any tool) at 9:16.
+# 然后改下面的字段，把每个镜头的「起始帧 PNG」放进 frames/。
+# 起始帧用 Dreamina / 即梦 等工具按 9:16 出图（出图提示词见 frames/PROMPTS.md）。
+#
+# 示例剧本：《夜班》—— 一个 4 镜头的连贯小故事。
 
-project: example          # display name; defaults to the folder name if omitted
-fps: 24                   # frames per second, shared by every shot
+project: 夜班              # 显示名；省略则用文件夹名
+model: wan                # 模型后端：wan(默认，中文友好) / ltx，详见 shotforge/backends.py
+fps: 24                   # 帧率，所有镜头共用
 
-# Values here apply to every shot unless the shot overrides them.
+# 💡 提示词语言：默认的 wan 文本编码器是 umT5（多语言），下面的「运动提示词」
+#   可以直接写中文。若改用 model: ltx（T5，偏英文），运动提示词请改成英文。
+#   注意：模型只看画面不看台词——它不生成台词/字幕/配音（见 docs/PIPELINE.md）。
+
+# defaults 里的值对每个镜头生效，除非镜头自己覆盖。
 defaults:
-  width: 480              # 9:16 vertical; snapped to a multiple of 32 at load time
+  width: 480              # 9:16 竖屏；加载时会被对齐到 backend 的 dim_multiple
   height: 832
-  steps: 40               # denoising steps; higher = slower, usually cleaner
-  seconds: 5              # clip length; see README for ways to exceed 5s
+  steps: 40               # 去噪步数；越高越慢，通常越干净
+  seconds: 5              # 单镜头时长；想超过 5s 见 README / tools/last_frame
   seed: 0
-  negative: "blurry, low quality, distorted, deformed, watermark, text, extra limbs, jitter"
+  negative: "模糊，低质量，画质差，扭曲，畸形，多余的手指，多余的肢体，水印，文字，字幕，抖动，闪烁"
 
-# Each shot: an id, a starting frame (relative to this folder), and a
-# motion/camera prompt describing what happens in the clip.
+# 每个镜头：id + 起始帧（相对本文件夹）+ 描述「画面里发生什么」的运动/镜头提示词。
 shots:
+  # 镜头1：深夜空办公室，女主疲惫地从电脑前抬头望向窗外。
   - id: s1
     frame: frames/s1.png
-    prompt: "A woman turns from a rain-streaked window to face the camera, slow push-in, cinematic lighting, subtle hair movement."
+    prompt: "深夜空荡的办公室里，一位疲惫的女人独自坐在工位前，缓缓抬起头望向窗外；暖色台灯柔光，镜头缓慢推进，电影感冷色调，发丝与呼吸轻微起伏。"
 
+  # 镜头2：手机屏幕亮起一条到账通知，冷光打在她的手和脸上。
   - id: s2
     frame: frames/s2.png
-    prompt: "Two people argue across a kitchen table, handheld camera, tense glances, steam rising from a cup."
+    prompt: "特写：她手中的手机屏幕亮起一条到账通知，冷蓝色的屏幕光在手指和脸上闪动；浅景深，手指轻微颤抖，眼神微微睁大。"
 
+  # 镜头3：她猛地起身，一把抓起椅背的风衣转身冲向门口。
   - id: s3
     frame: frames/s3.png
-    seconds: 8            # longer take, to demonstrate going past the 5s default
-    prompt: "A man walks down a neon-lit alley at night, slow tracking shot from behind, reflections on wet pavement."
+    prompt: "女人猛地站起身，一把抓起椅背上的风衣，急促地转身走向门口；手持镜头，轻微运动模糊，动作充满急迫感。"
+
+  # 镜头4（更长的一镜）：雨夜街头，男人撑伞在路灯下等她，她从远处跑来。
+  - id: s4
+    frame: frames/s4.png
+    seconds: 8            # 更长的一镜，演示如何超过 5s 默认值
+    prompt: "雨夜霓虹的街道，一个男人撑着黑伞站在路灯下等待，倒影映在湿漉漉的路面；远处一个女人朝他跑来，镜头从男人背后缓缓跟拍，细雨飘落，电影感。"
