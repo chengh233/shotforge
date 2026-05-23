@@ -20,6 +20,10 @@ new folder under `projects/`.
 - `tools/last_frame.py` — export a clip's last frame for chaining.
 - `projects/<name>/` — one script: `project.yaml` + `frames/` + `out/`.
 - `docs/PIPELINE.md` — how a video is generated end-to-end + a debug guide.
+- `docs/COMFYUI.md` + `scripts/comfyui_setup.sh` — the ComfyUI rendering backend
+  (plan B). diffusers' Wan I2V melts/garbles (a known diffusers limitation we
+  hit repeatedly); the high-quality path is ComfyUI. shotforge stays the
+  orchestrator and will call ComfyUI's HTTP API for rendering (Phase 2).
 
 ## Models
 - A project picks its model with the top-level `model:` field in `project.yaml`
