@@ -1,0 +1,34 @@
+# A shotforge project = ONE short-drama script.
+#
+# To start a new episode/script, copy this whole folder:
+#     cp -r projects/example projects/ep01
+# then edit the fields below and drop your starting-frame PNGs into frames/.
+# Frame images can be exported from Dreamina (or any tool) at 9:16.
+
+project: example          # display name; defaults to the folder name if omitted
+fps: 24                   # frames per second, shared by every shot
+
+# Values here apply to every shot unless the shot overrides them.
+defaults:
+  width: 480              # 9:16 vertical; snapped to a multiple of 32 at load time
+  height: 832
+  steps: 40               # denoising steps; higher = slower, usually cleaner
+  seconds: 5              # clip length; see README for ways to exceed 5s
+  seed: 0
+  negative: "blurry, low quality, distorted, deformed, watermark, text, extra limbs, jitter"
+
+# Each shot: an id, a starting frame (relative to this folder), and a
+# motion/camera prompt describing what happens in the clip.
+shots:
+  - id: s1
+    frame: frames/s1.png
+    prompt: "A woman turns from a rain-streaked window to face the camera, slow push-in, cinematic lighting, subtle hair movement."
+
+  - id: s2
+    frame: frames/s2.png
+    prompt: "Two people argue across a kitchen table, handheld camera, tense glances, steam rising from a cup."
+
+  - id: s3
+    frame: frames/s3.png
+    seconds: 8            # longer take, to demonstrate going past the 5s default
+    prompt: "A man walks down a neon-lit alley at night, slow tracking shot from behind, reflections on wet pavement."

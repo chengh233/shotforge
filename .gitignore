@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+projects/*/out/
+*.mp4
+hf_cache/
+.venv/
+
+# Claude Code personal (machine-local) settings; shared .claude/ config is fine to commit
+.claude/settings.local.json

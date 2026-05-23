@@ -1,0 +1,15 @@
+# shotforge dependencies (NOTE: torch is intentionally NOT listed here).
+#
+# torch: do NOT reinstall on Colab — it ships preinstalled and matched to the
+# CUDA driver, and reinstalling usually breaks the environment. On a local Mac,
+# install an MPS build of torch separately, and ONLY if you intend to run
+# inference locally:  pip install torch   (see pytorch.org for the right build).
+diffusers>=0.32
+transformers
+accelerate
+safetensors
+imageio
+imageio-ffmpeg
+av
+pyyaml
+sentencepiece
