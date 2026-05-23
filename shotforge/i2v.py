@@ -67,14 +67,27 @@ def load_pipe(backend: Backend):
     print(f"[model] {backend.name}: {backend.pipeline_cls} <- {model_id}")
     pipe = PipelineClass.from_pretrained(model_id, torch_dtype=dtype)
 
+    # Video VAEs are precision-sensitive: in fp16/bf16 the temporal decode can
+    # overflow to NaN, leaving every frame after the first one blank. Decoding
+    # the VAE in fp32 is the usual fix. Set $I2V_VAE_DTYPE=bf16 to trade it back
+    # for memory once you've confirmed the model decodes cleanly.
+    vae_dtype = os.environ.get("I2V_VAE_DTYPE", "fp32").lower()
+    if vae_dtype in ("fp32", "float32") and getattr(pipe, "vae", None) is not None:
+        pipe.vae.to(torch.float32)
+        print("[vae] dtype=float32 (set I2V_VAE_DTYPE=bf16 to use the model dtype)")
+
     if device == "cuda":
-        # Stream weights through the 24GB L4 instead of pinning the whole model
-        # in VRAM, and tile the VAE to keep decode memory flat.
+        # Stream weights through the 24GB L4 instead of pinning the whole model.
         pipe.enable_model_cpu_offload()
-        try:
-            pipe.vae.enable_tiling()
-        except Exception as exc:  # best effort; not all builds support tiling
-            print(f"[warn] vae tiling unavailable: {exc}")
+        # VAE tiling keeps decode memory flat but has produced blank/garbled
+        # frames with some video VAEs, so it's OFF by default. Enable it with
+        # $I2V_VAE_TILING=1 only if you hit OOM at higher resolutions.
+        if os.environ.get("I2V_VAE_TILING") == "1" and getattr(pipe, "vae", None) is not None:
+            try:
+                pipe.vae.enable_tiling()
+                print("[vae] tiling enabled")
+            except Exception as exc:  # best effort; not all builds support tiling
+                print(f"[warn] vae tiling unavailable: {exc}")
     else:
         pipe.to(device)
 

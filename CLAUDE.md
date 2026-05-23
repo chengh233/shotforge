@@ -49,7 +49,11 @@ python -m tools.last_frame   --video <clip>.mp4 --out <next>.png
   project's backend — don't bypass them or the model will error / make garbage.
 - **OOM on the L4 (24GB)** — lower `width`/`height` and/or `seconds`, and
   confirm `pipe.enable_model_cpu_offload()` actually ran (the cuda branch in
-  `load_pipe`). VAE tiling is enabled best-effort.
+  `load_pipe`). VAE runs in fp32 by default; set `$I2V_VAE_DTYPE=bf16` to halve
+  VAE memory, and `$I2V_VAE_TILING=1` to tile the VAE decode if still tight.
+- **Frames go blank after the first** — the video VAE overflowing to NaN in low
+  precision, or VAE tiling artifacts. fp32 VAE is now the default and tiling is
+  off by default (see `load_pipe`); keep `$I2V_VAE_TILING` unset.
 - **Frame not found** — frame paths in `project.yaml` are relative to the
   project dir; `load_project` joins them. Check `--project` points at the right
   folder.
