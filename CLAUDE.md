@@ -2,9 +2,10 @@
 
 **What this is:** a minimal, script-agnostic image-to-video pipeline for making
 short dramas (短剧). Author scripts + starting-frame PNGs locally, push to git;
-a GPU box (Colab, single L4 24GB) pulls and renders each shot to mp4 with a
-diffusers I2V model (Wan 2.2 by default, LTX-Video also supported). **One
-renderer, many projects** — a new script is a new folder under `projects/`.
+a GPU box (Colab; 24GB works via offload, 40GB+ runs the 14B resident) pulls and
+renders each shot to mp4 with a diffusers I2V model (Wan2.1-I2V-14B by default,
+LTX-Video also supported). **One renderer, many projects** — a new script is a
+new folder under `projects/`.
 
 ## Layout
 - `shotforge/backends.py` — `Backend` dataclass + `BACKENDS` registry +
@@ -22,16 +23,21 @@ renderer, many projects** — a new script is a new folder under `projects/`.
 
 ## Models
 - A project picks its model with the top-level `model:` field in `project.yaml`
-  (default `wan`). Known backends: `wan` (Wan 2.2, default — best for Chinese
-  prompts) and `ltx` (LTX-Video). Add one by appending to `BACKENDS` in
-  `backends.py`.
-- LTX's text encoder is T5 (English-centric) → write motion prompts in English.
-  Wan's is umT5 (multilingual) → Chinese prompts work. The drama's dialogue is
-  unrelated: these models output **silent video, no subtitles** (post-process
-  separately).
-- Wan defaults to the 5B TI2V variant; the A14B (MoE) variant won't fit a 24GB
-  L4. The Wan repo id / class / frame rules are best-effort — verify on the GPU
-  box (load_pipe prints available classes if the name is wrong).
+  (default `wan`). Backends in `backends.py`:
+  - `wan` — Wan2.1-I2V-14B-**720P** (default, best for Chinese dramas). Proper
+    image-to-video: `WanImageToVideoPipeline` auto-loads the CLIP image_encoder.
+  - `wan-480p` — same family at 480P, lighter/faster for draft renders.
+  - `ltx` — LTX-Video, light/fast but English-centric (T5).
+- **I2V = image + text**, not image alone: the starting frame fixes the look,
+  the per-shot `prompt` drives the motion. Both are required.
+- Wan's text encoder is umT5 (multilingual) → Chinese motion prompts work; LTX's
+  T5 wants English. These models output **silent video, no subtitles**
+  (post-process separately — see `docs/PIPELINE.md`).
+- Wan specifics handled in `load_pipe`: VAE + image_encoder forced to fp32, UniPC
+  `flow_shift` (5.0@720P / 3.0@480P), 16fps (the trained rate). 14B bf16 (~28GB)
+  wants a 40GB+ GPU resident; smaller cards auto cpu-offload (`$I2V_OFFLOAD`).
+- Class drift: `load_pipe` prints the installed diffusers' I2V class names if a
+  backend's `pipeline_cls` is wrong.
 
 ## Run
 ```bash
@@ -47,13 +53,16 @@ python -m tools.last_frame   --video <clip>.mp4 --out <next>.png
   **width/height divisible by the backend's `dim_multiple`** (LTX `32`, Wan
   `16`). Handled by `frames_for()` and `snap_dim()` in `manifest.py` using the
   project's backend — don't bypass them or the model will error / make garbage.
-- **OOM on the L4 (24GB)** — lower `width`/`height` and/or `seconds`, and
-  confirm `pipe.enable_model_cpu_offload()` actually ran (the cuda branch in
-  `load_pipe`). VAE runs in fp32 by default; set `$I2V_VAE_DTYPE=bf16` to halve
-  VAE memory, and `$I2V_VAE_TILING=1` to tile the VAE decode if still tight.
-- **Frames go blank after the first** — the video VAE overflowing to NaN in low
-  precision, or VAE tiling artifacts. fp32 VAE is now the default and tiling is
-  off by default (see `load_pipe`); keep `$I2V_VAE_TILING` unset.
+- **OOM / model too big** — 14B Wan in bf16 is ~28GB and won't fit a 24GB card
+  resident. `load_pipe` keeps the model resident on >=40GB GPUs and cpu-offloads
+  below that automatically (force with `$I2V_OFFLOAD=1`/`0`). Also lower
+  `width`/`height`/`seconds`; VAE runs fp32 (`$I2V_VAE_DTYPE=bf16` to halve it),
+  and `$I2V_VAE_TILING=1` tiles the decode.
+- **Frames go blank after the first** — most often the WRONG model for the I2V
+  pipeline: `WanImageToVideoPipeline` needs a real I2V checkpoint with a CLIP
+  `image_encoder` (Wan2.1-I2V-14B-480P/720P). Wan2.2-TI2V-5B has no image_encoder
+  and its I2V is broken in diffusers — don't use it here. Other causes: VAE NaN
+  in low precision (fp32 is the default) or VAE tiling (off by default).
 - **Frame not found** — frame paths in `project.yaml` are relative to the
   project dir; `load_project` joins them. Check `--project` points at the right
   folder.

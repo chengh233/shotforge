@@ -96,9 +96,10 @@ flowchart LR
 1. **选模型（backend）**：`load_project` 读 `project.yaml` 的 `model:` 字段，在
    `backends.py` 里查到对应 `Backend`（管线类名、checkpoint、帧/尺寸约束、默认值）。
 2. **加载管线**：`i2v.load_pipe(backend)` 按类名从 `diffusers` 动态加载管线，
-   `from_pretrained` 拉取权重。**进程内单例**——一次运行只加载一次，后续镜头复用。
-   在 CUDA 上启用 `enable_model_cpu_offload()`（权重在显存/内存间流式调度，省显存）
-   和 VAE tiling（分块解码，压平解码显存峰值）。
+   `from_pretrained` 拉取权重（Wan I2V 会一并加载其 CLIP image_encoder）。**进程内
+   单例**——一次运行只加载一次，后续镜头复用。VAE 与 image_encoder 强制 fp32（避免
+   黑帧），并按显存自动决定是否 cpu offload：≥40GB 常驻（更快），更小则流式（`$I2V_OFFLOAD`
+   可覆盖）。Wan 还会设置 UniPC 的 `flow_shift`（720P=5.0 / 480P=3.0）。
 3. **算帧数**：`frames_for(seconds, fps, quantum)` 把「秒数×帧率」换算成合法帧数
    `num_frames = quantum*N + 1`（LTX 量子=8，Wan=4）。
 4. **文本编码**：正面提示词 + negative 提示词经文本编码器（LTX 用 T5，Wan 用 umT5）
@@ -129,12 +130,18 @@ flowchart LR
 
 ## 5. 模型与提示词语言
 
-模型在 `project.yaml` 顶层用一行选择：`model: wan`（默认，中文友好）或 `model: ltx`。
+模型在 `project.yaml` 顶层用一行选择：`model: wan`（默认）/ `wan-480p` / `ltx`。
 
-| 模型 | backend | 文本编码器 | 提示词语言 | 备注 |
+| 模型 | backend | 文本编码器 | 提示词 | 备注 |
 |---|---|---|---|---|
-| Wan 2.2 | `wan` | umT5（多语言） | **中文/英文都可** | **默认**，中文短剧首选；用 5B TI2V 变体（A14B 放不进 24GB L4） |
-| LTX-Video | `ltx` | T5（偏英文） | **运动提示词建议用英文** | 已验证可在 L4 跑；想用英文提示词或已验证管线时选它 |
+| Wan2.1-I2V-14B **720P** | `wan` | umT5（多语言） | **中文/英文** | **默认**，中文短剧首选；正经 I2V 模型，14B bf16 约 28GB，需 40GB+ 显卡常驻 |
+| Wan2.1-I2V-14B 480P | `wan-480p` | umT5 | 中文/英文 | 同族 480P，更轻更快，适合草稿 |
+| LTX-Video | `ltx` | T5（偏英文） | **英文** | 轻量快，低显存/快速迭代时用 |
+
+> ⚠️ **I2V = 图 + 文字，不是只给图**：起始帧定「画面长什么样」，每镜头的 `prompt` 定
+> 「怎么动」，两者都要。另外：`WanImageToVideoPipeline` 需要带 CLIP image_encoder 的
+> **专门 I2V** checkpoint；**Wan2.2-TI2V-5B 没有这个组件、在 diffusers 里做不了 I2V**
+> （会只出第一帧），别拿它当 I2V 用。
 
 **关于"中文短剧 vs 英文短剧"**：这里的语言指的是**喂给模型的运动提示词**的语言，
 而不是短剧的台词。
@@ -188,7 +195,8 @@ flowchart LR
 
 | 现象 | 可能原因 | 调整 / 排查 |
 |---|---|---|
-| **CUDA OOM（显存爆）** | 分辨率/时长太大；offload 没生效 | 降 `width`/`height`、降 `seconds`；确认日志里 CUDA 分支跑了 `enable_model_cpu_offload()`；Wan 改用 5B TI2V 变体 |
+| **CUDA OOM（显存爆）** | 14B 太大放不下；分辨率/时长太大 | `load_pipe` 按显存自动 offload（`$I2V_OFFLOAD=1` 强制）；降 `width`/`height`/`seconds`；用 `model: wan-480p` |
+| **只有第一帧、之后空白** | I2V 用错模型（如 TI2V-5B 没 image_encoder）；或 VAE 精度 | 用 `wan`/`wan-480p`（=正经 I2V-14B）；VAE 默认已 fp32，`$I2V_VAE_TILING` 保持不设 |
 | **画面糊 / 崩坏 / 扭曲** | 帧数或尺寸不合法；步数太低 | 别手写帧数/尺寸（交给 `frames_for`/`snap_dim`）；`steps` 提到 40–50 |
 | **起始帧被"重画"、不像原图** | 提示词描述了与起始帧冲突的内容 | 提示词**只写运动/镜头**（怎么动、怎么推拉摇移），别重新描述画面内容 |
 | **画面被拉伸** | 起始帧比例 ≠ `width:height` | 出图按 9:16；或改 `width/height` 去匹配起始帧比例 |

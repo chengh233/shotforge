@@ -92,5 +92,5 @@ def load_project(path: str) -> Project:
         )
 
     name = str(data.get("project") or os.path.basename(os.path.abspath(path)))
-    fps = int(data.get("fps", 24))
+    fps = int(data.get("fps", backend.default_fps))
     return Project(root=path, name=name, model=backend.name, fps=fps, shots=shots)
