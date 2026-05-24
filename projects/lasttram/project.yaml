@@ -4,18 +4,18 @@
 # 打工族）；在车窗倒影与手中的辞职信之间熬到天将亮，最终下定决心。
 # 情绪线：疲惫 → 与夜归人共鸣 → 看清自己 → 下定决心。
 #
+# 漫画优先：frame_prompt 是「漫画分镜」——不动也要能一眼读懂这一格在讲什么（位置/神态/景深）。
 # 解耦：演员=cast(characters/) 布景=scene(scenes/) 画风=style(styles/) 运镜=camera(cameras.py)。
-#   - frame_prompt 只写「画面内容」，画风由 style 统一补；
-#   - prompt 只写「画面动作」，运镜由 camera 提供、画风的 video_suffix 收尾。
+#   - frame_prompt 只写「画面内容」，画风由 style 统一补；prompt 只写「画面动作」，运镜由 camera 补。
 # 出帧参考图：女主出镜(s1/s4/s5) 用小雪+车厢两张参考图；其他(s2/s3) 只用车厢参考图、不画小雪。
-# 时间线：s1–s4 深夜 → s5 凌晨约5点天将亮。
+# 时间线：s1–s4 深夜 → s5 凌晨约5点天将亮。提示词尽量中文（nano banana 中文很好）。
 
 project: 末班电车
 model: wan-480p          # 480P 草稿(快)；定稿换 wan(720P)
 fps: 16
 
 cast: yuki               # 演员：小雪（声音用于旁白，参考图用于她出镜的镜头）
-scene: nighttrain         # 布景：末班电车车厢（参考图喂给每一镜，锁同一节车厢+画幅）
+scene: nighttrain        # 布景：末班电车车厢（参考图喂给每一镜，锁同一节车厢+画幅）
 style: kyoani            # 画风：京阿尼（拼到出图/运镜提示词，换一行即换风格）
 
 defaults:
@@ -29,7 +29,7 @@ shots:
   - id: s1
     frame: frames/s1.jpeg
     camera: push_in
-    frame_prompt: "Medium three-quarter shot looking down the night train aisle: the same girl sits on the LEFT-side bench in the foreground close to camera, leaning her head against the dark window, gazing outside; her expression weary and melancholic, eyes half-lowered. Behind her the empty carriage recedes in deep perspective — rows of empty seats and a receding line of warm ceiling lights; strong sense of depth, dim warm light, deep black night outside; clean window glass with no reflection of her."
+    frame_prompt: "中近景，沿夜间电车过道望去：女主坐在【左侧】长椅、靠近镜头的前景，把头倚在漆黑的车窗上望向窗外，神情疲惫怅惘、眼睑微垂；她身后空荡的车厢沿纵深延展——成排空座与一排向远处排开的暖色车灯，强烈纵深，昏暗暖光，窗外漆黑深夜；车窗干净、不要出现她的倒影。"
     prompt: "女主把头倚在冰凉的车窗玻璃上、望着窗外出神，发丝随车身轻轻晃动，窗外深夜的城市灯火与铁轨缓缓向后掠过；昏黄暖车灯、夜色冷调，浅景深"
     dialogue: "末班车的玻璃，凉凉的。"
 
@@ -38,24 +38,24 @@ shots:
     frame: frames/s2.jpeg
     use_ref: false
     camera: static
-    frame_prompt: "Medium shot looking diagonally across the night train: a tired young mother sits on the RIGHT-side bench a few rows down the carriage (mid-ground), cradling a sleeping small child against her shoulder and gently patting its back; her own eyes half-closed with weary tenderness, head tilted slightly down. Empty seats in the foreground and a receding line of ceiling lights lead the eye to her, giving depth; dim warm light, deep black night outside; no reflection on the window glass."
+    frame_prompt: "中景，斜对角望向车厢另一侧：一位疲惫的年轻母亲坐在【右侧】长椅、往里几排的中景，怀里搂着熟睡的幼儿、轻拍其背；她自己也疲惫地半阖着眼、微微低头。前景的空座与一排向纵深排开的车灯把视线引向她，形成景深；昏暗暖光，窗外漆黑深夜；车窗上不要出现倒影。"
     prompt: "对面座位的年轻妇人怀里抱着熟睡的孩子、轻轻拍哄，自己也疲惫地半阖着眼，随车身轻轻摇晃；深夜车厢暖光昏黄，窗外漆黑，安静温柔"
-    dialogue: ""
+    dialogue: "对面，一位妈妈搂着孩子睡着了。"
 
   # 镜头3 · 戴耳机睡着的打工族（深夜·背景歌曲从这里起）【只用车厢·不画小雪】
   - id: s3
     frame: frames/s3.jpeg
     use_ref: false
     camera: static
-    frame_prompt: "Wider shot looking down the aisle toward the FAR end of the carriage: an exhausted night-shift worker, a young man in plain work clothes with earphones on, sits slumped against the window at the far LEFT (background), head tilted back, fast asleep with a deeply tired, slack expression. Empty seats and a receding line of warm ceiling lights stretch from the foreground toward him for strong depth; dim warm light, deep black night outside; no reflection on the glass."
+    frame_prompt: "稍宽的镜头，沿过道望向车厢【最里端】：一名疲惫的上夜班青年、穿着朴素工装、戴着耳机，瘫靠在远端左侧的车窗上、头向后仰、沉沉睡去，神情极度疲惫松弛。前景的空座与向纵深排开的暖色车灯一路延伸到他那里，强烈纵深；昏暗暖光，窗外漆黑深夜；玻璃上不要出现倒影。"
     prompt: "靠窗的打工族青年戴着耳机、头歪靠在车窗上沉沉睡去，胸口随呼吸微微起伏、耳机线轻晃，窗外深夜飞掠；昏黄车灯、安静"
-    dialogue: ""              # 背景歌曲从这一镜起：post 阶段用 --music <歌>.mp3
+    dialogue: "戴着耳机的他，也累得睡了过去。"
 
   # 镜头4 · 女主在车窗玻璃上的倒影特写（深夜·细节）【小雪+车厢】
   - id: s4
     frame: frames/s4.jpeg
     camera: static
-    frame_prompt: "Detailed close-up of the same girl's face reflected in the dark LEFT-side train window at night — her tired, pensive expression mirrored faintly on the glass, eyes lowered, fine detail in her eyes, eyelashes and hair; behind the reflection, the dim carriage interior and faint streaking night lights are visible through the glass; cool, intimate tone, shallow depth of field."
+    frame_prompt: "特写：女主映在【左侧】漆黑车窗玻璃上的脸部倒影——疲惫出神的神情在玻璃上若隐若现、双眼微垂，眼睛、睫毛与发丝纤毫毕现；倒影之后，透过玻璃可见昏暗的车厢内部与窗外缓缓流动的点点夜灯；冷调、私密，浅景深。"
     prompt: "女主映在漆黑车窗玻璃上的倒影若隐若现，疲惫出神的脸、睫毛与发丝纤毫毕现；玻璃外深夜的点点灯火透过倒影缓缓流动，她极轻地眨了一下眼；冷色调、安静细腻"
     dialogue: "玻璃里的我，原来这么累。"
 
@@ -63,6 +63,6 @@ shots:
   - id: s5
     frame: frames/s5.jpeg
     camera: push_in
-    frame_prompt: "Medium close-up of the same girl in her LEFT-side window seat, looking down at a folded letter held in both hands (plain paper, no readable text); her expression quiet, tired but resolved, a faint steadiness in her lowered eyes; the dim carriage softly blurred behind her with a hint of receding seats; pre-dawn around 5am, the sky outside the window just lightening to deep blue."
+    frame_prompt: "中近景：女主坐在【左侧】靠窗座位，低头凝视双手捧着的一封折叠信纸（素纸、没有可辨认的文字）；神情安静、疲惫却坚定，低垂的眼神里透出一丝笃定；身后昏暗的车厢柔和虚化、隐约可见向纵深排开的座椅；凌晨约5点，窗外天色刚泛起深蓝微光。"
     prompt: "女主低头凝视手中的辞职信（素纸、没有可辨认的文字），指尖微微收紧，神情平静而坚定；凌晨五点，窗外天色刚泛起深蓝微光，车厢昏暗"
     dialogue: "握了一整夜的信……天，快亮了。"

@@ -101,8 +101,7 @@ def generate(client, model: str, prompt: str, refs: list, out_path: str) -> bool
 
 
 def _consistency_suffix() -> str:
-    return ("Keep exactly the same character — same face, hairstyle, and outfit — "
-            "as in the reference image. Vertical 9:16 composition.")
+    return "保持与参考图完全相同的角色——相同的脸、发型、服装。竖构图 9:16。"
 
 
 def run_project(client, model: str, project_dir: str, ref_override: str | None,
@@ -136,22 +135,22 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
         if shot.use_ref:
             # protagonist (+ set): 1st image = the character, 2nd = the scene
             this_refs = char_img + scene_img
-            prompt = ", ".join(x for x in (appearance, fp, style) if x)
+            prompt = "，".join(x for x in (appearance, fp, style) if x)
             if scene_img:
-                prompt = (f"{prompt}. Keep the SAME girl (face, hair, outfit) from the first reference image, "
-                          f"in the SAME setting and SAME art style as the second (scene) reference image. Vertical 9:16.")
+                prompt = (f"{prompt}。保持第一张参考图中同一个女孩（脸、发型、服装），"
+                          f"置于第二张（场景）参考图相同的车厢与画风之中。竖构图 9:16。")
             else:
-                prompt = f"{prompt}. {_consistency_suffix()}"
+                prompt = f"{prompt}。{_consistency_suffix()}"
             kind = "char+scene" if scene_img else "char"
         else:
             # extras / scenery: SCENE ref locks location+style+aspect; exclude the protagonist
             this_refs = scene_img
-            prompt = ", ".join(x for x in (fp, style) if x)
+            prompt = "，".join(x for x in (fp, style) if x)
             if scene_img:
-                prompt = (f"{prompt}. Use the SAME setting, SAME art style and SAME vertical 9:16 framing as the "
-                          f"reference image. Do NOT include the girl.")
+                prompt = (f"{prompt}。使用与参考图完全相同的场景、画风与竖构图 9:16；"
+                          f"画面中不要出现那个女孩。")
             else:
-                prompt = f"{prompt}. Vertical 9:16 composition."
+                prompt = f"{prompt}。竖构图 9:16。"
             kind = "scene" if scene_img else "no-ref"
         base, ext = os.path.splitext(shot.frame)
         for v in range(max(1, variations)):
@@ -172,7 +171,7 @@ def run_prompts(client, model: str, prompts_file: str, ref_paths: list[str],
     if not prompts:
         raise SystemExit(f"[nano] no prompts in {prompts_file}")
     refs = _load_refs(ref_paths) if ref_paths else []
-    suffix = (" " + _consistency_suffix()) if refs else " Vertical 9:16 composition."
+    suffix = ("。" + _consistency_suffix()) if refs else "。竖构图 9:16。"
     os.makedirs(out_dir, exist_ok=True)
     print(f"[nano] prompts={prompts_file} ({len(prompts)}) x{count} | model={model} | refs={ref_paths or 'none'}")
 

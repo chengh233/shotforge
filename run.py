@@ -22,7 +22,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 
-USAGE = ("usage: python run.py <setup|genref|train|frames|frames-lora|video|stitch|dub|subs|post> "
+USAGE = ("usage: python run.py <setup|genref|train|frames|frames-lora|manga|video|stitch|dub|subs|post> "
          "[project|character] [extra args]")
 
 
@@ -54,6 +54,8 @@ def main() -> None:
         run(PY, "-m", "shotforge.frames_lora", "--project", project, *extra)
     elif stage == "video":
         run(PY, "-m", "shotforge.generate", "--project", project, "--engine", "comfy", *extra)
+    elif stage == "manga":  # assemble frames into a 条漫/storyboard page (read it as stills)
+        run(PY, "-m", "tools.manga", "--project", project, *extra)
     elif stage == "stitch":
         run(PY, "-m", "tools.stitch", "--project", project)
     elif stage == "dub":

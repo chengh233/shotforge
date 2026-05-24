@@ -1,7 +1,7 @@
 # 角色库条目 —— 一个可复用的"演员"。在剧本里用 `cast: yuki` 选她出演。
 name: 小雪
-# appearance：英文，只写「这个人长什么样」（画风交给 styles/，不要在这里写风格词）。
-appearance: "an 18-year-old girl, short black bob, large expressive eyes, soft gentle features, wearing a beige trench coat and a light scarf"
+# appearance：只写「这个人长什么样」（画风交给 styles/，不要在这里写风格词）。
+appearance: "18岁少女，黑色齐耳短发，富有表现力的大眼睛，柔和的五官，身穿米色风衣、系一条浅色围巾"
 personality: "安静、温柔、内向，习惯把心事藏起来；细腻、念旧"
 tone: "轻声细语，句子短，略带文艺、内省"   # 写台词时的语气参考
 voice: zh-CN-XiaoxiaoNeural               # edge-tts 声音（配音用）

@@ -1,8 +1,8 @@
-# 场景库条目 —— 一个可复用的"布景"。剧本里用 `scene: nighttram` 选它。
+# 场景库条目 —— 一个可复用的"布景"。剧本里用 `scene: nighttrain` 选它。
 # 和 characters/ 并列：characters=演员(谁)，scenes=布景(在哪)。
 name: 末班电车车厢
-# description：英文，只写「这个地方长什么样」（画风交给 styles/）。强调纵深/空间感。
-description: "interior of a quiet late-night Japanese commuter TRAIN carriage (densha) seen in deep one-point perspective looking down the central aisle toward the doors at the far end; long bench seats along both sides under large dark train windows, a receding row of warm ceiling lights overhead, worn hanging handrail straps; mostly empty, strong sense of depth and space, the dark railway night (passing platforms / tracks) outside the windows"
+# description：只写「这个地方长什么样」（画风交给 styles/）。强调纵深/空间感。
+description: "安静的深夜日本通勤电车车厢内部，沿中央过道望向远端车门的强烈单点透视；两侧是长排座椅、大块漆黑的车窗，头顶一排暖色车灯向纵深排开，吊环垂挂；车厢大体空荡，强烈的纵深与空间感，窗外是漆黑的铁道夜景（掠过的站台与铁轨）"
 #
 # 固定布局约定（让各镜空间一致 —— 各 frame_prompt 按此标注位置）：
 #   · 小雪(女主)：车厢【左侧】靠窗，靠近镜头的【前景】
