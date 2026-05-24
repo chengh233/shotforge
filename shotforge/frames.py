@@ -141,6 +141,11 @@ def main() -> None:
     ap.add_argument("--shot", default=None, help="generate only this shot id")
     ap.add_argument("--guidance", type=float, default=3.5,
                     help="Flux Kontext guidance — higher follows the edit prompt harder (~2.5 is the default)")
+    # dataset mode: Kontext variations of ONE character from a prompts file (e.g. a LoRA training set)
+    ap.add_argument("--prompts", default=None, help="dataset mode: text file, one Kontext edit per line")
+    ap.add_argument("--out", default=None, help="dataset mode: output dir (default characters/<id>/dataset)")
+    ap.add_argument("--character", default=None, help="dataset mode: character id (its ref is the source image)")
+    ap.add_argument("--ref", default=None, help="dataset mode: explicit reference image (overrides --character)")
     ap.add_argument("--dump", default=None, help="just print node ids/classes of a workflow file")
     args = ap.parse_args()
 
@@ -149,16 +154,6 @@ def main() -> None:
             print(f"{nid:>8} {n.get('class_type'):<22} {n.get('_meta', {}).get('title', '')}")
         return
 
-    from .manifest import load_project
-
-    if not args.project:
-        raise SystemExit("--project is required")
-    project = load_project(args.project)
-    if not project.character_ref or not os.path.isfile(project.character_ref):
-        raise SystemExit(
-            f"[frames] need a character reference image. Set `character_ref:` in project.yaml and put the "
-            f"image there (got {project.character_ref!r}). One image of the character keeps all shots consistent."
-        )
     if not os.path.isfile(args.workflow):
         raise SystemExit(
             f"[frames] workflow not found: {args.workflow}\n"
@@ -166,6 +161,42 @@ def main() -> None:
             f"(see docs/COMFYUI.md), or pass --workflow <path>."
         )
     workflow = load_workflow(args.workflow)
+
+    # DATASET mode — Kontext variations of ONE character (e.g. to build a LoRA
+    # training set): one edit prompt per line in --prompts, saved as NNN.png in --out.
+    if args.prompts:
+        from .characters import characters_dir, load_character
+        ref, out_dir = args.ref, args.out
+        if not ref and args.character:
+            ch = load_character(args.character)
+            ref = ch.ref
+            out_dir = out_dir or os.path.join(characters_dir(), ch.id, "dataset")
+        if not ref or not os.path.isfile(ref):
+            raise SystemExit("[frames] dataset mode needs a source image: pass --ref <img> or --character <id>")
+        out_dir = out_dir or "dataset"
+        with open(args.prompts, "r", encoding="utf-8") as fh:
+            prompts = [ln.strip() for ln in fh if ln.strip() and not ln.lstrip().startswith("#")]
+        if not prompts:
+            raise SystemExit(f"[frames] no prompts in {args.prompts}")
+        os.makedirs(out_dir, exist_ok=True)
+        print(f"[frames] dataset | ref={ref} | {len(prompts)} prompts -> {out_dir}")
+        for i, p in enumerate(prompts, 1):
+            out_path = os.path.join(out_dir, f"{i:03d}.png")
+            print(f"[data] {i:02d}/{len(prompts)} (seed={i}) -> {out_path}")
+            render_frame(workflow, args.comfy_url, ref, p, out_path, seed=i, guidance=args.guidance)
+        print(f"[ok] dataset done -> {out_dir}")
+        return
+
+    from .manifest import load_project
+
+    if not args.project:
+        raise SystemExit("--project is required (or --prompts for dataset mode)")
+    project = load_project(args.project)
+    if not project.character_ref or not os.path.isfile(project.character_ref):
+        raise SystemExit(
+            f"[frames] need a character reference image. Set `character_ref:` in project.yaml and put the "
+            f"image there (got {project.character_ref!r}). One image of the character keeps all shots consistent."
+        )
     print(f"[frames] server={args.comfy_url} | workflow={args.workflow} | ref={project.character_ref}")
 
     for i, shot in enumerate(project.shots):
