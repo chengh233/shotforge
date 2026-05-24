@@ -1,6 +1,6 @@
 # 一个 shotforge 项目 = 一部短剧。
 #
-# 剧本：《末班电车》—— 6 镜头，带一个小反转：独自归途的疲惫 → 一条消息 → 心境转暖。
+# 剧本：《末班电车》—— 6 镜头，带一个小反转：独自归途的疲惫 → 窗外万家灯火 → 心境转暖。
 #
 # 起始帧用 Flux Kontext 一键生成（frames 阶段）：你只需提供 ONE 张角色参考图
 # （character_ref），Kontext 让每镜都是"同一个人换场景"，保持一致。
@@ -42,19 +42,19 @@ shots:
     prompt: "镜头沿车窗向左缓缓横移（轨道移动），窗外的城市灯火、站台灯箱与行道树以明显的视差快速向后掠过，玻璃上倒映着流动的光带；少女靠在窗边，眼神随光影缓缓移动，发丝轻颤；夜色霓虹、略带寂寥，日系动漫风格。"
     dialogue: "回去，也只是空荡荡的房间。"
 
-  # 镜头4 · 手机特写（转折点·冷光）
+  # 镜头4 · 窗外万家灯火（转折点·暖光乍现）
   - id: s4
     frame: frames/s4.jpeg
-    frame_prompt: "The same girl looks down at her phone glowing with a new message, a flicker of surprise softening her face; cold blue screen light on her face, dark interior around her."
-    prompt: "特写：少女手中的手机屏幕亮起一条消息通知，冷蓝色屏幕光骤然打亮她的手指与下半张脸；镜头极轻微地推近，她的视线落到屏幕、瞳孔微微一缩、指尖轻轻一动；背景车厢暖光虚化成柔和光斑，浅景深，日系动漫风格。"
-    dialogue: "「到家了说一声，明天一起吃饭。」"
+    frame_prompt: "The same girl gazes out the tram window, her eyes softly widening in quiet wonder; outside, a sweeping night view of a hillside covered in countless warm twinkling house lights; the warm golden glow reflects on her face."
+    prompt: "镜头越过少女的肩头缓缓推近车窗，窗外山坡上层层叠叠的万家灯火在夜色里温暖闪烁、随车身缓缓向后流动，暖金色的光晕映在她的侧脸与睫毛上；她微微睁大眼睛、神情怔住、呼吸一滞，发丝轻动；冷色调中透出暖意，日系动漫电影感。"
+    dialogue: "……那么多，温暖的灯火。"
 
-  # 镜头5 · 抬头微笑（反转·转暖）
+  # 镜头5 · 神情转暖（反转·转暖）
   - id: s5
     frame: frames/s5.jpeg
-    frame_prompt: "The same girl looks up from the phone with a soft, warm, relieved smile, gentle eyes; warm golden interior light on her face, tender mood."
-    prompt: "少女缓缓从手机抬起头、望向窗外，紧绷的神情一点点化开，嘴角浮起一抹温柔的微笑、眼里泛起暖意；镜头轻轻推近，车厢暖光渐渐铺满她的脸（光色由冷转暖），发丝随抬头动作轻轻扬起，日系动漫电影感。"
-    dialogue: "啊……原来，不是一个人。"
+    frame_prompt: "The same girl watching the distant lights, her weary expression melting into a soft, warm, gentle smile with tender eyes; warm golden light on her face, hopeful mood."
+    prompt: "少女静静望着窗外的万家灯火，紧绷的神情一点点化开，嘴角浮起一抹温柔的微笑、眼里泛起暖意；镜头轻轻推近她的脸，窗外暖金的光晕渐渐铺满她的面庞（光色由冷转暖），发丝随车身轻晃，日系动漫电影感。"
+    dialogue: "每一盏灯下，都有人在等谁回家吧。"
 
   # 镜头6 · 雨停暖光（希望·收尾）
   - id: s6
