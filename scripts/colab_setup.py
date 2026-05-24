@@ -57,6 +57,8 @@ def install_deps() -> None:
     sh("pip install -q pyyaml requests edge-tts")
     if subprocess.run("command -v aria2c", shell=True).returncode != 0:
         sh("apt-get -qq install -y aria2")
+    # CJK font so burned-in Chinese subtitles render (else they show as boxes).
+    sh("apt-get -qq install -y fonts-noto-cjk")
 
 
 def download_models() -> None:

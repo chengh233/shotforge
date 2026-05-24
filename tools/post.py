@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import platform
 import shutil
 import subprocess
 import tempfile
@@ -26,6 +27,9 @@ import tempfile
 from shotforge.manifest import load_project
 
 AR = "44100"  # uniform audio rate so segments concat cleanly
+# A font with CJK glyphs, or Chinese subtitles burn in as boxes (tofu). macOS
+# ships PingFang; on Linux/Colab install fonts-noto-cjk (colab_setup.py does).
+DEFAULT_FONT = "PingFang SC" if platform.system() == "Darwin" else "Noto Sans CJK SC"
 
 
 def _run(cmd: list[str]) -> None:
@@ -49,6 +53,7 @@ def main() -> None:
     ap.add_argument("--project", required=True)
     ap.add_argument("--music", default=None, help="background-music file (optional)")
     ap.add_argument("--music-volume", type=float, default=0.25)
+    ap.add_argument("--font", default=DEFAULT_FONT, help="subtitle font (must have CJK glyphs)")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
@@ -111,7 +116,8 @@ def main() -> None:
         if os.path.isfile(srt):
             srt_local = os.path.join(work, "subs.srt")
             shutil.copyfile(srt, srt_local)
-            vf = ["-vf", "subtitles=subs.srt"]
+            # force_style picks a CJK font so Chinese doesn't render as boxes.
+            vf = ["-vf", f"subtitles=subs.srt:force_style='Fontname={args.font},Outline=1'"]
         cmd = ["ffmpeg", "-y", "-i", silent, "-i", final_audio, *vf,
                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", os.path.abspath(final)]
         # run from work/ so the relative subtitles path resolves
