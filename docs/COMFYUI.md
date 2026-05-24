@@ -35,6 +35,31 @@ tail -n 30 /content/comfyui.log                                   # 起不来就
 
 ---
 
+## 生成起始帧（文生图，也用 ComfyUI）
+
+ComfyUI 也能做文生图，所以 **T2I + I2V 一个工具搞定**：生成分镜图 → GUI 里预览 →
+满意就存 → 作为 I2V 的起始帧。
+
+**模型推荐（动漫）**：
+- **Animagine XL 4.0** 或 **Illustrious 系**（如 Nova Anime XL）：SDXL 动漫专精，约
+  6.5GB，A100 秒出，**下载小**（新会话重下也快）——做动漫首选。
+- **Qwen-Image**：当前最强开源通用模型、原生支持 ComfyUI、中文文字渲染好；但模型大、
+  显存/下载重，想要顶级质量或画面里要写中文字时再用。
+
+**装一个动漫 SDXL（以 Animagine XL 4.0 为例，用 hf_transfer 加速）**：
+```bash
+pip install -q hf_transfer
+export HF_HUB_ENABLE_HF_TRANSFER=1
+hf download cagliostrolab/animagine-xl-4.0 animagine-xl-4.0.safetensors \
+  --local-dir /content/ComfyUI/models/checkpoints
+# 文件名若不符，去该模型 HF 页的 Files 标签确认；装完重启 ComfyUI 才扫得到
+```
+
+**用法**：ComfyUI 里 Browse Templates → Image → SDXL txt2img 模板 → 选这个 checkpoint
+→ 写动漫提示词 → Queue → 右侧预览 → 满意就 Save，作为 I2V 起始帧（放进 `frames/`）。
+
+---
+
 ## 架构：哪台机器做什么
 
 | 机器 | 角色 | 要不要装 ComfyUI |

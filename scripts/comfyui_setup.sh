@@ -28,17 +28,22 @@ LO="$COMFY/models/loras"
 BASE22="https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files"
 BASE21="https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files"
 
-echo "[comfyui] downloading Wan 2.2 I2V models for the official 4-step Lightning workflow"
-# Two 14B experts (high-noise + low-noise) — Wan 2.2 is a MoE; ComfyUI swaps them.
-# The official I2V template uses the fp8 experts + lightx2v 4-step Lightning
-# LoRAs (4 steps -> fast, good quality). fp16 experts also exist (drop the
-# _fp8_scaled suffix) but the template won't use them.
-wget -c -P "$DM"  "$BASE22/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors"
-wget -c -P "$DM"  "$BASE22/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors"
-wget -c -P "$TE"  "$BASE21/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
-wget -c -P "$VAE" "$BASE22/vae/wan_2.1_vae.safetensors"
-wget -c -P "$LO"  "$BASE22/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors"
-wget -c -P "$LO"  "$BASE22/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors"
+# Faster downloads: aria2 with many parallel connections (much faster than wget
+# for big files). Set HF_TOKEN in the env for higher HF rate limits.
+command -v aria2c >/dev/null 2>&1 || { echo "[comfyui] installing aria2"; apt-get -qq update && apt-get -qq install -y aria2; }
+AUTH=()
+[ -n "${HF_TOKEN:-}" ] && AUTH=(--header="Authorization: Bearer ${HF_TOKEN}")
+dl() {  # dl <url> <target-dir>  — filename = url basename; resumes; 16 connections
+  aria2c -x16 -s16 -k1M --continue=true --console-log-level=warn "${AUTH[@]}" -d "$2" "$1"
+}
+
+echo "[comfyui] downloading Wan 2.2 I2V models (fp8 experts + lightx2v 4-step LoRAs)"
+dl "$BASE22/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors" "$DM"
+dl "$BASE22/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors"  "$DM"
+dl "$BASE21/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"              "$TE"
+dl "$BASE22/vae/wan_2.1_vae.safetensors"                                       "$VAE"
+dl "$BASE22/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors"   "$LO"
+dl "$BASE22/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors"    "$LO"
 
 # Official native Wan 2.2 I2V workflow — drag this file onto the ComfyUI canvas.
 wget -c -O /content/wan2_2_i2v_workflow.json \
