@@ -106,7 +106,7 @@ def _consistency_suffix() -> str:
 
 
 def run_project(client, model: str, project_dir: str, ref_override: str | None,
-                variations: int, overwrite: bool) -> None:
+                variations: int, overwrite: bool, shot_filter: str | None = None) -> None:
     from shotforge.manifest import load_project
 
     project = load_project(project_dir)
@@ -119,6 +119,8 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
     print(f"[nano] project={project_dir} | model={model} | ref={ref}")
 
     for shot in project.shots:
+        if shot_filter and shot.id != shot_filter:
+            continue
         if not shot.frame_prompt.strip():
             print(f"[skip] {shot.id}: no frame_prompt")
             continue
@@ -173,6 +175,7 @@ def main() -> None:
     ap.add_argument("--out", default=None, help="output dir (dataset mode)")
     ap.add_argument("--count", type=int, default=1, help="images per prompt (dataset mode)")
     ap.add_argument("--variations", type=int, default=1, help="frames per shot (project mode; >1 -> sN_1, sN_2…)")
+    ap.add_argument("--shot", default=None, help="project mode: only this shot id (regenerate one frame)")
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--api-key", default=None)
     ap.add_argument("--overwrite", action="store_true")
@@ -184,7 +187,7 @@ def main() -> None:
     client = _client(args.api_key)
     if args.project:
         run_project(client, args.model, args.project, args.ref[0] if args.ref else None,
-                    args.variations, args.overwrite)
+                    args.variations, args.overwrite, args.shot)
     else:
         out = args.out or "out_nano"
         run_prompts(client, args.model, args.prompts, args.ref, out, args.count, args.overwrite)

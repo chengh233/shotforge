@@ -24,35 +24,35 @@ shots:
   # 镜头1 · 拉远展开（疲惫·冷调）
   - id: s1
     frame: frames/s1.jpeg
-    frame_prompt: "Change the scene to a quiet night tram: the same girl sits alone by the window, looking tired and a little downcast; dim dusk-blue light outside, soft warm interior lamp, cool melancholic mood."
+    frame_prompt: "Medium close-up of the same girl by the window of a quiet night tram, shoulders slightly slumped, tired and a little downcast; warm interior lamp, dusk-blue city outside, cool melancholic mood."
     prompt: "黄昏的末班电车车厢，少女独自靠窗而坐、肩膀微塌、神情疲惫；镜头从她的近景极缓地向后拉远并轻微下降，逐渐展开整节安静空荡的车厢，吊环随车身轻轻摇晃，窗外暮色中的城市楼影与暖橙夕照缓缓向后流过、光斑掠过空座椅，空气里浮尘轻飘；日系动漫赛璐璐风格，电影感长镜头。"
     dialogue: "末班车，又是我一个人。"
 
   # 镜头2 · 推近侧脸（出神）
   - id: s2
     frame: frames/s2.jpeg
-    frame_prompt: "The same girl gazes out the dark tram window, weary and absent-minded; deeper night outside, cool blue light and faint neon reflections on her face."
+    frame_prompt: "Medium side-profile shot of the same girl gazing out the dark tram window, weary and absent-minded; deeper night outside, cool blue light and faint neon reflections on her face."
     prompt: "镜头缓缓推近到少女的侧脸特写，她疲惫地望向窗外、微微出神；窗外流动的霓虹灯火在她脸颊与睫毛上投下游移的光斑，刘海与碎发被微风轻轻吹动，她极轻地眨了一下眼、呼吸轻微起伏；浅景深、背景虚化，日系动漫电影感。"
     dialogue: "今天，也没什么特别的。"
 
   # 镜头3 · 横移视差（孤独）
   - id: s3
     frame: frames/s3.jpeg
-    frame_prompt: "The same girl leans against the tram window with a faint, lonely expression; dark city night outside with streaking neon lights, cool blue tone."
+    frame_prompt: "Medium shot of the same girl leaning against the tram window with a faint, lonely expression; dark city night outside with streaking neon lights, cool blue tone."
     prompt: "镜头沿车窗向左缓缓横移（轨道移动），窗外的城市灯火、站台灯箱与行道树以明显的视差快速向后掠过，玻璃上倒映着流动的光带；少女靠在窗边，眼神随光影缓缓移动，发丝轻颤；夜色霓虹、略带寂寥，日系动漫风格。"
     dialogue: "回去，也只是空荡荡的房间。"
 
   # 镜头4 · 窗外万家灯火（转折点·暖光乍现）
   - id: s4
     frame: frames/s4.jpeg
-    frame_prompt: "The same girl gazes out the tram window, her eyes softly widening in quiet wonder; outside, a sweeping night view of a hillside covered in countless warm twinkling house lights; the warm golden glow reflects on her face."
+    frame_prompt: "Over-the-shoulder shot from behind the same girl as she turns to the window; outside, a sweeping night view of a hillside covered in countless warm twinkling house lights fills the window; quiet wonder, warm golden glow on her face."
     prompt: "镜头越过少女的肩头缓缓推近车窗，窗外山坡上层层叠叠的万家灯火在夜色里温暖闪烁、随车身缓缓向后流动，暖金色的光晕映在她的侧脸与睫毛上；她微微睁大眼睛、神情怔住、呼吸一滞，发丝轻动；冷色调中透出暖意，日系动漫电影感。"
     dialogue: "……那么多，温暖的灯火。"
 
   # 镜头5 · 神情转暖（反转·转暖）
   - id: s5
     frame: frames/s5.jpeg
-    frame_prompt: "The same girl watching the distant lights, her weary expression melting into a soft, warm, gentle smile with tender eyes; warm golden light on her face, hopeful mood."
+    frame_prompt: "Medium close-up of the same girl watching the distant lights, her weary expression softening into a warm, gentle smile with tender eyes; warm golden light on her face, hopeful."
     prompt: "少女静静望着窗外的万家灯火，紧绷的神情一点点化开，嘴角浮起一抹温柔的微笑、眼里泛起暖意；镜头轻轻推近她的脸，窗外暖金的光晕渐渐铺满她的面庞（光色由冷转暖），发丝随车身轻晃，日系动漫电影感。"
     dialogue: "每一盏灯下，都有人在等谁回家吧。"
 
@@ -60,6 +60,6 @@ shots:
   - id: s6
     frame: frames/s6.jpeg
     seconds: 6
-    frame_prompt: "The same girl by the window in bright, clear morning light after the rain; calm and hopeful expression, soft warm daylight, blue sky outside — a warm contrast to the earlier cool night."
+    frame_prompt: "Medium shot of the same girl by the window in bright, clear morning light after the rain; calm and hopeful, soft warm daylight and blue sky outside — a warm contrast to the earlier cool night."
     prompt: "雨渐渐停歇，乌云裂开一道缝、暖光透过沾着残余雨珠的车窗洒进车厢，光束里浮尘缓缓飘动；镜头极缓地向后拉远并轻微上摇，少女安静地望向窗外渐亮的天色、神情释然温柔；窗上残留的雨痕缓缓滑落，柔和暖色调，日系动漫电影感。"
     dialogue: "明天，会是好天气吧。"
