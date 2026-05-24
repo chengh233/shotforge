@@ -116,6 +116,7 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
                          f"pass --ref or set cast/character_ref.")
     char_img = _load_refs([char_ref])
     appearance = (project.character or "").strip()
+    style = (project.style_positive or "").strip()   # look from styles/<id> (project `style:`)
 
     # The SET: an optional scene reference image keeps the same location + art style
     # + aspect across every shot, including ones without the protagonist (see scenes/).
@@ -135,7 +136,7 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
         if shot.use_ref:
             # protagonist (+ set): 1st image = the character, 2nd = the scene
             this_refs = char_img + scene_img
-            prompt = ", ".join(x for x in (appearance, fp) if x)
+            prompt = ", ".join(x for x in (appearance, fp, style) if x)
             if scene_img:
                 prompt = (f"{prompt}. Keep the SAME girl (face, hair, outfit) from the first reference image, "
                           f"in the SAME setting and SAME art style as the second (scene) reference image. Vertical 9:16.")
@@ -145,11 +146,12 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
         else:
             # extras / scenery: SCENE ref locks location+style+aspect; exclude the protagonist
             this_refs = scene_img
+            prompt = ", ".join(x for x in (fp, style) if x)
             if scene_img:
-                prompt = (f"{fp} Use the SAME setting, SAME art style and SAME vertical 9:16 framing as the "
+                prompt = (f"{prompt}. Use the SAME setting, SAME art style and SAME vertical 9:16 framing as the "
                           f"reference image. Do NOT include the girl.")
             else:
-                prompt = f"{fp} Vertical 9:16 composition."
+                prompt = f"{prompt}. Vertical 9:16 composition."
             kind = "scene" if scene_img else "no-ref"
         base, ext = os.path.splitext(shot.frame)
         for v in range(max(1, variations)):

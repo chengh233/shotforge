@@ -1,7 +1,7 @@
 # 角色库条目 —— 一个可复用的"演员"。在剧本里用 `cast: yuki` 选她出演。
 name: 小雪
-# appearance：英文（给 SDXL 出参考图 + Flux Kontext，两者都偏英文/Kontext 只懂英文）。
-appearance: "a girl in Kyoto Animation (KyoAni) anime style — soft delicate cel-shading with gentle gradients, large expressive eyes with glossy detailed highlights, naturalistic soft facial features, finely rendered hair, warm soft lighting; about 18 years old, short black bob, beige trench coat with a light scarf"
+# appearance：英文，只写「这个人长什么样」（画风交给 styles/，不要在这里写风格词）。
+appearance: "an 18-year-old girl, short black bob, large expressive eyes, soft gentle features, wearing a beige trench coat and a light scarf"
 personality: "安静、温柔、内向，习惯把心事藏起来；细腻、念旧"
 tone: "轻声细语，句子短，略带文艺、内省"   # 写台词时的语气参考
 voice: zh-CN-XiaoxiaoNeural               # edge-tts 声音（配音用）

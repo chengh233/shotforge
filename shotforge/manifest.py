@@ -30,6 +30,7 @@ class Shot:
     dialogue: str = ""       # spoken line / narration for this shot (TTS + subtitles)
     frame_prompt: str = ""   # English prompt to GENERATE this shot's frame
     use_ref: bool = True     # generate WITH the character reference (False = extras/scenery: no ref, no protagonist)
+    camera: str = ""         # camera-move id (see cameras.py); prepended to `prompt` for the Wan motion prompt
 
 
 @dataclass
@@ -46,6 +47,10 @@ class Project:
     scene: str = ""           # scene-library id (project.yaml `scene:`) — the reusable set
     scene_ref: str = ""       # path to ONE reference image of the setting
     scene_desc: str = ""      # English description of the setting (for prompts)
+    style: str = ""           # style-library id (project.yaml `style:`) — the reusable look
+    style_positive: str = ""  # look fragment appended to image-gen prompts
+    style_negative: str = ""  # negative tags for SDXL image gen
+    style_video_suffix: str = ""  # Chinese suffix appended to Wan motion prompts
 
 
 def frames_for(seconds: float, fps: int, quantum: int = 8) -> int:
@@ -84,14 +89,37 @@ def load_project(path: str) -> Project:
     backend = get_backend(data.get("model"))
     defaults: dict[str, Any] = data.get("defaults") or {}
 
+    # The look: a style-library id provides a prompt fragment (still) + a Chinese
+    # suffix (video). Resolved first so shots can fold the video suffix in.
+    style = str(data.get("style", "") or "")
+    style_positive = style_negative = style_video_suffix = ""
+    if style:
+        from .styles import load_style
+        st = load_style(style)
+        style_positive, style_negative, style_video_suffix = st.positive, st.negative, st.video_suffix
+
+    cam: dict[str, str] | None = None  # camera vocab, loaded lazily if any shot uses it
+
     shots: list[Shot] = []
     for raw in data.get("shots") or []:
         merged: dict[str, Any] = {**defaults, **raw}
+        # Motion prompt = <camera move> + <scene action> + <style video suffix>.
+        # Without a `camera:`, the `prompt` is used verbatim (back-compat).
+        camera_id = str(merged.get("camera", "") or "")
+        action = str(merged.get("prompt", ""))
+        if camera_id:
+            if cam is None:
+                from .cameras import cameras as _load_cameras
+                cam = _load_cameras()
+            move = cam.get(camera_id, "")
+            prompt = "，".join(p for p in (move, action.strip(), style_video_suffix) if p)
+        else:
+            prompt = action
         shots.append(
             Shot(
                 id=str(merged["id"]),
                 frame=os.path.join(path, str(merged["frame"])),
-                prompt=str(merged.get("prompt", "")),
+                prompt=prompt,
                 seconds=float(merged.get("seconds", Shot.seconds)),
                 width=snap_dim(int(merged.get("width", backend.default_width)), backend.dim_multiple),
                 height=snap_dim(int(merged.get("height", backend.default_height)), backend.dim_multiple),
@@ -101,6 +129,7 @@ def load_project(path: str) -> Project:
                 dialogue=str(merged.get("dialogue", Shot.dialogue)),
                 frame_prompt=str(merged.get("frame_prompt", Shot.frame_prompt)),
                 use_ref=bool(merged.get("use_ref", Shot.use_ref)),
+                camera=camera_id,
             )
         )
 
@@ -134,4 +163,6 @@ def load_project(path: str) -> Project:
 
     return Project(root=path, name=name, model=backend.name, fps=fps, shots=shots,
                    character=character, character_ref=character_ref, cast=cast, voice=voice,
-                   scene=scene, scene_ref=scene_ref, scene_desc=scene_desc)
+                   scene=scene, scene_ref=scene_ref, scene_desc=scene_desc,
+                   style=style, style_positive=style_positive, style_negative=style_negative,
+                   style_video_suffix=style_video_suffix)

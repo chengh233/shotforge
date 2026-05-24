@@ -4,21 +4,19 @@
 # 打工族）；在车窗倒影与手中的辞职信之间熬到天明，最后窗外日出，新的一天开始。
 # 情绪线：疲惫 → 与夜归人共鸣 → 看清自己 → 下定决心 → 希望。
 #
-# 起始帧用 nano banana 生成（人物一致靠参考图）。每镜都标了【用小雪参考图】还是【不用】：
-#   - 女主出镜(s1/s4/s5)：用 characters/yuki/ref.png 作参考，保持同一个人。
-#   - 其他乘客/空镜(s2 妇人 / s3 打工族 / s6 窗外日出)：不要用小雪参考图，单独生成。
-# 倒影：中间镜头(s2/s3) 不要出现女主在玻璃上的倒影；倒影只留给 s4 的特写。
+# 解耦：演员=cast(characters/) 布景=scene(scenes/) 画风=style(styles/) 运镜=camera(cameras.py)。
+#   - frame_prompt 只写「画面内容」，画风由 style 统一补；
+#   - prompt 只写「画面动作」，运镜由 camera 提供、画风的 video_suffix 收尾。
+# 出帧参考图：女主出镜(s1/s4/s5) 用小雪+车厢两张参考图；其他(s2/s3/s6) 只用车厢参考图、不画小雪。
 # 时间线：s1–s4 深夜 → s5 凌晨约5点天将亮 → s6 日出清晨。
-# frame_prompt 用英文（喂 nano banana）；运动提示词(prompt) 与台词(dialogue) 用中文。
 
 project: 末班电车
 model: wan-480p          # 480P 草稿(快)；定稿换 wan(720P)
 fps: 16
 
-# 选角：女主=小雪。她的声音用于旁白(dub)；参考图用于她出镜的 s1/s4/s5。
-cast: yuki
-# 选景：末班电车车厢。这张布景参考图会喂给每一镜（含无人物镜），锁住同一节车厢+画风+画幅。
-scene: nighttram
+cast: yuki               # 演员：小雪（声音用于旁白，参考图用于她出镜的镜头）
+scene: nighttram         # 布景：末班电车车厢（参考图喂给每一镜，锁同一节车厢+画幅）
+style: kyoani            # 画风：京阿尼（拼到出图/运镜提示词，换一行即换风格）
 
 defaults:
   steps: 40
@@ -27,48 +25,54 @@ defaults:
   negative: "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
 
 shots:
-  # 镜头1 · 女主靠窗出神（深夜·建立）【用小雪参考图】
+  # 镜头1 · 女主靠窗出神（深夜·建立）【小雪+车厢】
   - id: s1
     frame: frames/s1.jpeg
-    frame_prompt: "Medium three-quarter shot of the same girl leaning against the tram window late at night, her head resting on the cool glass, gazing outside lost in thought; a quiet, almost empty carriage with dim warm interior light, deep black night and faint distant city lights outside; clean window glass with no reflection of her; Kyoto Animation (KyoAni) anime style, soft cel shading."
-    prompt: "镜头从斜侧缓缓推近女主，她把头倚在冰凉的车窗玻璃上、望着窗外出神，发丝随车身轻轻晃动，窗外深夜的城市灯火与铁轨缓缓向后掠过；昏黄暖车灯、夜色冷调，浅景深，日系动漫电影感。"
+    camera: push_in
+    frame_prompt: "Medium three-quarter shot of the same girl leaning against the tram window late at night, her head resting on the cool glass, gazing outside lost in thought; a quiet, almost empty carriage with dim warm interior light, deep black night and faint distant city lights outside; clean window glass with no reflection of her."
+    prompt: "女主把头倚在冰凉的车窗玻璃上、望着窗外出神，发丝随车身轻轻晃动，窗外深夜的城市灯火与铁轨缓缓向后掠过；昏黄暖车灯、夜色冷调，浅景深"
     dialogue: "末班车的玻璃，凉凉的。"
 
-  # 镜头2 · 对面妇人抱着熟睡的孩子（深夜）【不用小雪参考图】
+  # 镜头2 · 对面妇人抱着熟睡的孩子（深夜）【只用车厢·不画小雪】
   - id: s2
     frame: frames/s2.jpeg
-    use_ref: false           # 不用小雪参考图（不同的人）
-    frame_prompt: "Medium shot across the night tram aisle of a tired young mother holding a sleeping small child in her arms on the opposite seat; dim warm interior light, deep black night outside the windows; gentle, weary tenderness; no reflection on the window glass; Kyoto Animation (KyoAni) anime style, soft cel shading."
-    prompt: "镜头对着对面座位的年轻妇人，她怀里抱着熟睡的孩子、轻轻拍哄，自己也疲惫地半阖着眼，身体随车身轻轻摇晃；深夜车厢暖光昏黄，窗外漆黑，安静温柔，日系动漫电影感。"
+    use_ref: false
+    camera: static
+    frame_prompt: "Medium shot across the night tram aisle of a tired young mother holding a sleeping small child in her arms on the opposite seat; dim warm interior light, deep black night outside the windows; gentle, weary tenderness; no reflection on the window glass."
+    prompt: "对面座位的年轻妇人怀里抱着熟睡的孩子、轻轻拍哄，自己也疲惫地半阖着眼，随车身轻轻摇晃；深夜车厢暖光昏黄，窗外漆黑，安静温柔"
     dialogue: ""
 
-  # 镜头3 · 戴耳机睡着的打工族（深夜·背景音乐从这里起）【不用小雪参考图】
+  # 镜头3 · 戴耳机睡着的打工族（深夜·背景歌曲从这里起）【只用车厢·不画小雪】
   - id: s3
     frame: frames/s3.jpeg
-    use_ref: false           # 不用小雪参考图（不同的人）
-    frame_prompt: "Medium shot of an exhausted night-shift worker, a young man in plain work clothes wearing earphones, slumped asleep against the tram window with his head tilted; deep night outside, dim warm carriage light; quiet and tired; no reflection on the glass; Kyoto Animation (KyoAni) anime style, soft cel shading."
-    prompt: "镜头对着靠窗睡着的打工族青年，他戴着耳机、头歪靠在车窗上沉沉睡去，胸口随呼吸微微起伏、耳机线轻晃，窗外深夜飞掠；昏黄车灯、安静，日系动漫电影感。"
+    use_ref: false
+    camera: static
+    frame_prompt: "Medium shot of an exhausted night-shift worker, a young man in plain work clothes wearing earphones, slumped asleep against the tram window with his head tilted; deep night outside, dim warm carriage light; quiet and tired; no reflection on the glass."
+    prompt: "靠窗的打工族青年戴着耳机、头歪靠在车窗上沉沉睡去，胸口随呼吸微微起伏、耳机线轻晃，窗外深夜飞掠；昏黄车灯、安静"
     dialogue: ""              # 背景歌曲从这一镜起：post 阶段用 --music <歌>.mp3
 
-  # 镜头4 · 女主在车窗玻璃上的倒影特写（深夜·细节）【用小雪参考图】
+  # 镜头4 · 女主在车窗玻璃上的倒影特写（深夜·细节）【小雪+车厢】
   - id: s4
     frame: frames/s4.jpeg
-    frame_prompt: "Detailed close-up of the same girl's reflection in the dark tram window glass at night — her tired, pensive face mirrored faintly on the glass, fine detail in her eyes, eyelashes and hair; the black night and faint streaking lights showing through behind the reflection; cool, intimate tone; Kyoto Animation (KyoAni) anime style, soft cel shading."
-    prompt: "特写：女主映在漆黑车窗玻璃上的倒影，疲惫出神的脸在玻璃上若隐若现，睫毛、发丝纤毫毕现；玻璃外深夜的点点灯火透过倒影缓缓流动，她极轻地眨了一下眼；冷色调、安静细腻，日系动漫电影感。"
+    camera: static
+    frame_prompt: "Detailed close-up of the same girl's reflection in the dark tram window glass at night — her tired, pensive face mirrored faintly on the glass, fine detail in her eyes, eyelashes and hair; the black night and faint streaking lights showing through behind the reflection; cool, intimate tone."
+    prompt: "女主映在漆黑车窗玻璃上的倒影若隐若现，疲惫出神的脸、睫毛与发丝纤毫毕现；玻璃外深夜的点点灯火透过倒影缓缓流动，她极轻地眨了一下眼；冷色调、安静细腻"
     dialogue: "玻璃里的我，原来这么累。"
 
-  # 镜头5 · 低头看手里的辞职信（凌晨约5点·天将亮）【用小雪参考图】
+  # 镜头5 · 低头看手里的辞职信（凌晨约5点·天将亮）【小雪+车厢】
   - id: s5
     frame: frames/s5.jpeg
-    frame_prompt: "Medium close-up of the same girl looking down at a folded letter held in both hands (plain paper, no readable text), a quiet and resolved expression; pre-dawn around 5am, the sky outside the window just beginning to lighten to deep blue, dim tram interior; Kyoto Animation (KyoAni) anime style, soft cel shading."
-    prompt: "镜头轻轻推近，女主低头凝视手中的辞职信（素纸、没有可辨认的文字），指尖微微收紧，神情平静而坚定；凌晨五点，窗外天色刚泛起深蓝微光，车厢昏暗；日系动漫电影感。"
+    camera: push_in
+    frame_prompt: "Medium close-up of the same girl looking down at a folded letter held in both hands (plain paper, no readable text), a quiet and resolved expression; pre-dawn around 5am, the sky outside the window just beginning to lighten to deep blue, dim tram interior."
+    prompt: "女主低头凝视手中的辞职信（素纸、没有可辨认的文字），指尖微微收紧，神情平静而坚定；凌晨五点，窗外天色刚泛起深蓝微光，车厢昏暗"
     dialogue: "握了一整夜的信……天，快亮了。"
 
-  # 镜头6 · 主人公视角·窗外日出（清晨·主人公不出镜·铁轨声）【不用小雪参考图】
+  # 镜头6 · 主人公视角·窗外日出（清晨·主人公不出镜·铁轨声）【只用车厢·不画小雪】
   - id: s6
     frame: frames/s6.jpeg
     seconds: 6
-    use_ref: false           # 不用小雪参考图（空镜·主人公不出镜）
-    frame_prompt: "First-person POV looking out the tram window at dawn, no person in frame — the sun slowly rising over the horizon, railway tracks stretching toward it, warm golden morning light spilling across the fields and into the empty carriage; hopeful, serene; Kyoto Animation (KyoAni) anime style, soft cel shading."
-    prompt: "主人公视角望向窗外（画面中没有人物），地平线上太阳正缓缓升起，铁轨向远方延伸，暖金色的晨光铺满原野、漫进车厢，伴随车轮与铁轨规律的咔哒声响；通透、充满希望，日系动漫电影感。"
+    use_ref: false
+    camera: pull_back_tilt
+    frame_prompt: "First-person POV looking out the tram window at dawn, no person in frame — the sun slowly rising over the horizon, railway tracks stretching toward it, warm golden morning light spilling across the fields and into the empty carriage; hopeful, serene."
+    prompt: "主人公视角望向窗外（画面中没有人物），地平线上太阳正缓缓升起，铁轨向远方延伸，暖金色的晨光铺满原野、漫进车厢，伴随车轮与铁轨规律的咔哒声响；通透、充满希望"
     dialogue: "新的一天，开始了。"

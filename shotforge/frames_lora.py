@@ -139,8 +139,8 @@ def main() -> None:
     ap.add_argument("--strength", type=float, default=0.85, help="LoRA strength")
     ap.add_argument("--width", type=int, default=832)
     ap.add_argument("--height", type=int, default=1216)
-    ap.add_argument("--style", default="masterpiece, best quality, amazing quality, soft cel shading",
-                    help="quality/style tags appended to every prompt")
+    ap.add_argument("--style", default=None,
+                    help="style/quality tags appended to every prompt (default: the project's style + quality tags)")
     ap.add_argument("--dump", default=None, help="just print node ids/classes of a workflow file")
     args = ap.parse_args()
 
@@ -168,6 +168,10 @@ def main() -> None:
         raise SystemExit("[frames-lora] no LoRA: set `cast:` in project.yaml or pass --lora <file> (and --trigger)")
     trigger = (trigger or "").strip()
 
+    # style: explicit --style wins, else the project's style fragment + quality tags
+    style = args.style if args.style is not None else \
+        ", ".join(x for x in (project.style_positive, "masterpiece, best quality") if x)
+
     workflow = _load(args.workflow)
     print(f"[frames-lora] server={args.comfy_url} | lora={lora_name} (x{args.strength}) | trigger={trigger!r}")
 
@@ -177,7 +181,7 @@ def main() -> None:
         if not shot.frame_prompt.strip():
             print(f"[skip] {shot.id}: no frame_prompt")
             continue
-        parts = [p for p in (trigger, shot.frame_prompt.strip(), args.style.strip()) if p]
+        parts = [p for p in (trigger, shot.frame_prompt.strip(), style.strip()) if p]
         prompt = ", ".join(parts)
         seed = shot.seed + i
         print(f"[frame] {shot.id} (seed={seed}) -> {shot.frame}")
