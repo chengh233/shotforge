@@ -43,6 +43,9 @@ class Project:
     character_ref: str = ""   # path to ONE reference image of the character
     cast: str = ""            # character-library id cast in this project (project.yaml `cast:`)
     voice: str = ""           # TTS voice for the cast character (used by tools.dub)
+    scene: str = ""           # scene-library id (project.yaml `scene:`) — the reusable set
+    scene_ref: str = ""       # path to ONE reference image of the setting
+    scene_desc: str = ""      # English description of the setting (for prompts)
 
 
 def frames_for(seconds: float, fps: int, quantum: int = 8) -> int:
@@ -118,5 +121,17 @@ def load_project(path: str) -> Project:
         character_ref = character_ref or ch.ref
         voice = ch.voice
 
+    # The set: a scene-library id provides one reference image + description, reused
+    # across every shot (and across projects) for a consistent location/style.
+    scene = str(data.get("scene", "") or "")
+    scene_ref = ""
+    scene_desc = ""
+    if scene:
+        from .scenes import load_scene
+        sc = load_scene(scene)
+        scene_ref = sc.ref
+        scene_desc = sc.description
+
     return Project(root=path, name=name, model=backend.name, fps=fps, shots=shots,
-                   character=character, character_ref=character_ref, cast=cast, voice=voice)
+                   character=character, character_ref=character_ref, cast=cast, voice=voice,
+                   scene=scene, scene_ref=scene_ref, scene_desc=scene_desc)

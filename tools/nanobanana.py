@@ -110,13 +110,20 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
     from shotforge.manifest import load_project
 
     project = load_project(project_dir)
-    ref = ref_override or project.character_ref
-    if not ref or not os.path.isfile(ref):
-        raise SystemExit(f"[nano] need a reference image (project character_ref={project.character_ref!r}); "
+    char_ref = ref_override or project.character_ref
+    if not char_ref or not os.path.isfile(char_ref):
+        raise SystemExit(f"[nano] need a character reference image (character_ref={project.character_ref!r}); "
                          f"pass --ref or set cast/character_ref.")
-    refs = _load_refs([ref])
+    char_img = _load_refs([char_ref])
     appearance = (project.character or "").strip()
-    print(f"[nano] project={project_dir} | model={model} | ref={ref}")
+
+    # The SET: an optional scene reference image keeps the same location + art style
+    # + aspect across every shot, including ones without the protagonist (see scenes/).
+    if project.scene and not (project.scene_ref and os.path.isfile(project.scene_ref)):
+        raise SystemExit(f"[nano] project uses scene={project.scene!r} but its reference image is missing "
+                         f"({project.scene_ref!r}). Generate one shot of the empty set (vertical 9:16) and save it there.")
+    scene_img = _load_refs([project.scene_ref]) if (project.scene_ref and os.path.isfile(project.scene_ref)) else []
+    print(f"[nano] project={project_dir} | model={model} | char_ref={char_ref} | scene_ref={project.scene_ref or '-'}")
 
     for shot in project.shots:
         if shot_filter and shot.id != shot_filter:
@@ -124,14 +131,26 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
         if not shot.frame_prompt.strip():
             print(f"[skip] {shot.id}: no frame_prompt")
             continue
+        fp = shot.frame_prompt.strip()
         if shot.use_ref:
-            this_refs = refs
-            prompt = ", ".join(x for x in (appearance, shot.frame_prompt.strip()) if x)
-            prompt = f"{prompt}. {_consistency_suffix()}"
+            # protagonist (+ set): 1st image = the character, 2nd = the scene
+            this_refs = char_img + scene_img
+            prompt = ", ".join(x for x in (appearance, fp) if x)
+            if scene_img:
+                prompt = (f"{prompt}. Keep the SAME girl (face, hair, outfit) from the first reference image, "
+                          f"in the SAME setting and SAME art style as the second (scene) reference image. Vertical 9:16.")
+            else:
+                prompt = f"{prompt}. {_consistency_suffix()}"
+            kind = "char+scene" if scene_img else "char"
         else:
-            # extras / scenery: no character reference, no protagonist appearance prefix
-            this_refs = []
-            prompt = f"{shot.frame_prompt.strip()} Vertical 9:16 composition."
+            # extras / scenery: SCENE ref locks location+style+aspect; exclude the protagonist
+            this_refs = scene_img
+            if scene_img:
+                prompt = (f"{fp} Use the SAME setting, SAME art style and SAME vertical 9:16 framing as the "
+                          f"reference image. Do NOT include the girl.")
+            else:
+                prompt = f"{fp} Vertical 9:16 composition."
+            kind = "scene" if scene_img else "no-ref"
         base, ext = os.path.splitext(shot.frame)
         for v in range(max(1, variations)):
             out = shot.frame if variations <= 1 else f"{base}_{v + 1}{ext}"
@@ -139,7 +158,7 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
                 print(f"[skip] {out} exists (use --overwrite)")
                 continue
             tag = "" if variations <= 1 else f" v{v + 1}"
-            print(f"[nano] {shot.id}{tag} ({'ref' if shot.use_ref else 'no-ref'}) -> {out}")
+            print(f"[nano] {shot.id}{tag} ({kind}) -> {out}")
             generate(client, model, prompt, this_refs, out)
     print("[ok] frames done")
 
