@@ -95,7 +95,7 @@ def _download(server: str, info: dict, out_path: str) -> None:
         fh.write(resp.content)
 
 
-def render_frame(workflow: dict, server: str, ref_image: str, prompt: str, out_path: str) -> None:
+def render_frame(workflow: dict, server: str, ref_image: str, prompt: str, out_path: str, seed: int = 0) -> None:
     wf = copy.deepcopy(workflow)
 
     loaders = _ids(wf, "LoadImage")
@@ -111,6 +111,15 @@ def render_frame(workflow: dict, server: str, ref_image: str, prompt: str, out_p
     # if several, pick the one with the most existing text (the positive prompt)
     target = max(encoders, key=lambda nid: len(str(wf[nid]["inputs"].get("text", ""))))
     wf[target]["inputs"]["text"] = prompt
+
+    # distinct seed per shot so frames vary even when prompts are close
+    for n in wf.values():
+        if str(n.get("class_type", "")).startswith("KSampler"):
+            inp = n["inputs"]
+            if "seed" in inp:
+                inp["seed"] = seed
+            elif "noise_seed" in inp and inp.get("add_noise", "enable") != "disable":
+                inp["noise_seed"] = seed
 
     outputs = _wait(server, _queue(server, wf))
     _download(server, _find_image(outputs), out_path)
@@ -149,16 +158,18 @@ def main() -> None:
     workflow = load_workflow(args.workflow)
     print(f"[frames] server={args.comfy_url} | workflow={args.workflow} | ref={project.character_ref}")
 
-    for shot in project.shots:
+    for i, shot in enumerate(project.shots):
         if args.shot and shot.id != args.shot:
             continue
         if not shot.frame_prompt.strip():
             print(f"[skip] {shot.id}: no frame_prompt")
             continue
-        prompt = f"{project.character}. {shot.frame_prompt}".strip(". ").strip() if project.character else shot.frame_prompt
+        # Kontext: the reference image already carries the character — DON'T repeat
+        # the appearance in the prompt (that makes it just preserve the reference).
+        # The frame_prompt describes only what changes (scene / framing / expression).
         out_path = shot.frame  # already joined to the project dir by load_project
-        print(f"[frame] {shot.id} -> {out_path}")
-        render_frame(workflow, args.comfy_url, project.character_ref, prompt, out_path)
+        print(f"[frame] {shot.id} (seed={shot.seed + i}) -> {out_path}")
+        render_frame(workflow, args.comfy_url, project.character_ref, shot.frame_prompt, out_path, seed=shot.seed + i)
     print("[ok] frames done")
 
 
