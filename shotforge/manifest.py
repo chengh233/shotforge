@@ -31,7 +31,8 @@ class Shot:
     dialogue: str = ""        # spoken line / narration for this shot (TTS + subtitles)
     frame_prompt: str = ""    # image CONTENT for this shot's frame (a.k.a. `content`)
     camera: str = ""          # camera-move id (cameras.py)
-    base: str = ""            # generate this frame from another shot's frame (chaining; keeps seat/pose)
+    base: str = ""            # generate this frame from another shot's frame (chaining)
+    base_mode: str = ""       # "" / continue = keep composition (same camera); "reframe" = same space, NEW camera angle (e.g. 180° reverse)
     subjects: list[str] = field(default_factory=list)  # cast roles IN this frame ([] = extras/scenery)
     speaker: str = ""         # cast role whose dialogue/voice this shot carries
     still: bool = False       # frame-only master/blocking shot: generated + usable as `base`, NOT animated
@@ -149,6 +150,7 @@ def load_project(path: str) -> Project:
             frame_prompt=str(merged.get("content", merged.get("frame_prompt", ""))),
             camera=camera_id,
             base=str(merged.get("base", "") or ""),
+            base_mode=str(merged.get("base_mode", "") or ""),
             subjects=subjects,
             speaker=speaker,
             still=bool(merged.get("still", False)),

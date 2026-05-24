@@ -51,7 +51,7 @@ def build_image_spec(project: Project, shot: Shot) -> ImageSpec:
                 if el.lora:
                     loras.append(Lora(os.path.basename(el.lora), el.lora_trigger))
         parts += [shot.frame_prompt, project.style_positive]
-        glue = g.get("base", "")
+        glue = g.get("base_reframe" if shot.base_mode == "reframe" else "base", "")
     else:
         for role in shot.subjects:                       # cast members in frame
             el = project.cast_elements.get(role)
