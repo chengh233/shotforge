@@ -17,10 +17,16 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 import time
 import uuid
 
 import requests
+
+# ComfyUI's log (KSampler tqdm progress goes here). Override with $COMFY_LOG.
+LOG_PATH = os.environ.get("COMFY_LOG", "/content/comfyui.log")
+_PCT_RE = re.compile(r"(\d{1,3})%\|")     # tqdm: "  45%|████ | 9/20 ..."
+_FRAC_RE = re.compile(r"(\d+)/(\d+)")
 
 # Injection points in comfyui/wan_i2v_api.json:
 NODE_IMAGE = "97"          # LoadImage.image (the uploaded start frame)
@@ -79,6 +85,25 @@ def _queue(server: str, workflow: dict, client_id: str) -> str:
     return data["prompt_id"]
 
 
+def _log_progress() -> str | None:
+    """Latest KSampler step progress from ComfyUI's log tail, e.g. '45% (9/20)'.
+    Wan 2.2 runs two sampler passes (high- then low-noise expert), so it climbs
+    0→100% twice per shot, then the VAE decode runs."""
+    try:
+        with open(LOG_PATH, "rb") as fh:
+            fh.seek(0, 2)
+            fh.seek(max(0, fh.tell() - 4096))
+            chunk = fh.read().decode("utf-8", "replace")
+    except OSError:
+        return None
+    for frag in reversed(re.split(r"[\r\n]", chunk)):  # tqdm updates in place with \r
+        m = _PCT_RE.search(frag)
+        if m:
+            f = _FRAC_RE.search(frag)
+            return f"{m.group(1)}%" + (f" ({f.group(0)})" if f else "")
+    return None
+
+
 def _wait(server: str, prompt_id: str, timeout: float = 3600.0) -> dict:
     start = time.time()
     beat = 0.0
@@ -94,7 +119,9 @@ def _wait(server: str, prompt_id: str, timeout: float = 3600.0) -> dict:
                 return entry["outputs"]
         elapsed = time.time() - start
         if elapsed - beat >= 10:
-            print(f"[comfy]   …rendering ({elapsed:.0f}s; `tail /content/comfyui.log` for step progress)")
+            prog = _log_progress()
+            tail = f" | step {prog}" if prog else f"; `tail {LOG_PATH}` for step progress"
+            print(f"[comfy]   …rendering ({elapsed:.0f}s{tail})")
             beat = elapsed
         if elapsed > timeout:
             raise SystemExit(f"[comfy] timed out after {timeout:.0f}s waiting for {prompt_id}")
