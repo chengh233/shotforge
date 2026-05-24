@@ -27,7 +27,8 @@ class Shot:
     steps: int = 40
     seed: int = 0
     negative: str = ""
-    dialogue: str = ""   # spoken line / narration for this shot (TTS + subtitles)
+    dialogue: str = ""       # spoken line / narration for this shot (TTS + subtitles)
+    frame_prompt: str = ""   # English edit instruction to GENERATE this shot's frame (Flux Kontext)
 
 
 @dataclass
@@ -37,6 +38,8 @@ class Project:
     model: str          # backend name from project.yaml `model:` (e.g. "ltx")
     fps: int
     shots: list[Shot]
+    character: str = ""       # shared character description (prepended to frame prompts)
+    character_ref: str = ""   # path (joined to project dir) to ONE reference image of the character
 
 
 def frames_for(seconds: float, fps: int, quantum: int = 8) -> int:
@@ -90,9 +93,14 @@ def load_project(path: str) -> Project:
                 seed=int(merged.get("seed", Shot.seed)),
                 negative=str(merged.get("negative", Shot.negative)),
                 dialogue=str(merged.get("dialogue", Shot.dialogue)),
+                frame_prompt=str(merged.get("frame_prompt", Shot.frame_prompt)),
             )
         )
 
     name = str(data.get("project") or os.path.basename(os.path.abspath(path)))
     fps = int(data.get("fps", backend.default_fps))
-    return Project(root=path, name=name, model=backend.name, fps=fps, shots=shots)
+    character = str(data.get("character", ""))
+    ref = data.get("character_ref")
+    character_ref = os.path.join(path, str(ref)) if ref else ""
+    return Project(root=path, name=name, model=backend.name, fps=fps, shots=shots,
+                   character=character, character_ref=character_ref)

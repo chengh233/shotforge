@@ -22,7 +22,12 @@ new folder under `projects/`.
   runs on the Mac): TTS voiceover (edge-tts) from each shot's `dialogue`, an SRT
   timed to clip lengths, and the final mux (concat + voiceover + optional music
   + burned subtitles). No GPU.
-- `run.py` — staged runner (`python run.py <setup|serve|video|dub|subs|post> ...`).
+- `shotforge/frames.py` — `frames` stage: generate consistent starting frames via
+  Flux Kontext (ComfyUI). One `character_ref` image keeps all shots the same
+  person; per-shot **English** `frame_prompt` sets the scene. Auto-detects the
+  workflow's LoadImage/CLIPTextEncode/SaveImage nodes. `scripts/flux_setup.py`
+  installs the Kontext models. Run: `python run.py frames <project>`.
+- `run.py` — staged runner (`python run.py <setup|frames|video|dub|subs|post> ...`).
 - `scripts/colab_setup.py` — one-command setup on a fresh Colab.
 - `docs/STAGES.md` — staged pipeline, what runs where (GPU only does video I2V;
   everything else on the Mac to save GPU time), per-stage view-artifact commands.

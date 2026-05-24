@@ -60,6 +60,35 @@ hf download cagliostrolab/animagine-xl-4.0 animagine-xl-4.0.safetensors \
 
 ---
 
+## 一键生成一致性起始帧（Flux Kontext · `frames` 阶段）
+
+`frames` 阶段用 **Flux Kontext**：你给 **1 张角色参考图**，它让每个分镜都「同一个人换场景」，
+自动保持一致——不用一张张手动出图。
+
+**1. 装 Kontext 模型**（GPU box，装完会自动重启 ComfyUI）：
+```bash
+python scripts/flux_setup.py
+```
+| 文件 | 目录 |
+|---|---|
+| `flux1-dev-kontext_fp8_scaled.safetensors` | `diffusion_models/` |
+| `ae.safetensors` | `vae/` |
+| `clip_l.safetensors` | `text_encoders/` |
+| `t5xxl_fp8_e4m3fn_scaled.safetensors` | `text_encoders/` |
+
+**2. 一次性导出 Kontext 工作流** → `comfyui/flux_kontext_api.json`
+（ComfyUI 里 Browse Templates 找 Flux Kontext，开 Dev mode → Export(API)，像 I2V 那样）。
+`frames.py` 按节点 class_type 自动识别注入点（LoadImage/CLIPTextEncode/SaveImage），节点 id 不用对。
+
+**3. 用法**：
+- 角色参考图放 `projects/<name>/frames/_ref.png`（对应 project.yaml 的 `character_ref`）。
+- 每镜**英文**出图提示词写在 project.yaml 的 `frame_prompt`（Kontext 只懂英文）。
+- 跑：`python run.py frames projects/lasttram` → 一次生成所有分镜帧。
+
+> ⚠️ Kontext 提示词只支持英文；运动提示词(prompt)与台词(dialogue)仍用中文。
+
+---
+
 ## 架构：哪台机器做什么
 
 | 机器 | 角色 | 要不要装 ComfyUI |

@@ -22,7 +22,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 
-USAGE = "usage: python run.py <setup|video|stitch|dub|subs|post> [project] [extra args]"
+USAGE = "usage: python run.py <setup|frames|video|stitch|dub|subs|post> [project] [extra args]"
 
 
 def run(*cmd: str) -> None:
@@ -43,7 +43,9 @@ def main() -> None:
         sys.exit(f"stage '{stage}' needs a project path, e.g. projects/example")
     project, extra = rest[0], rest[1:]
 
-    if stage == "video":
+    if stage == "frames":
+        run(PY, "-m", "shotforge.frames", "--project", project, *extra)
+    elif stage == "video":
         run(PY, "-m", "shotforge.generate", "--project", project, "--engine", "comfy", *extra)
     elif stage == "stitch":
         run(PY, "-m", "tools.stitch", "--project", project)
