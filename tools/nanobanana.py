@@ -54,8 +54,11 @@ def _load_refs(paths: list[str]):
     return imgs
 
 
-def generate(client, model: str, prompt: str, refs: list, out_path: str) -> None:
-    """One call: prompt (+ optional reference images) -> save the first image."""
+def generate(client, model: str, prompt: str, refs: list, out_path: str) -> bool:
+    """One call: prompt (+ optional reference images) -> save the first image.
+    Returns True on success; on a recoverable per-image block (no content / safety
+    refusal) prints a warning and returns False so the batch can continue. Only a
+    hard quota/billing error stops the whole run."""
     from PIL import Image  # noqa: WPS433
 
     try:
@@ -74,19 +77,27 @@ def generate(client, model: str, prompt: str, refs: list, out_path: str) -> None
         raise
     cands = getattr(resp, "candidates", None) or []
     if not cands:
-        raise SystemExit(f"[nano] no candidates returned (blocked?): {getattr(resp, 'prompt_feedback', '')}")
+        print(f"[warn] no candidates (blocked?): {getattr(resp, 'prompt_feedback', '')} — skipped")
+        return False
+    cand = cands[0]
+    content = getattr(cand, "content", None)
+    parts = getattr(content, "parts", None) if content is not None else None
+    if not parts:
+        # finish_reason is usually SAFETY / IMAGE_SAFETY / PROHIBITED_CONTENT / RECITATION
+        print(f"[warn] empty response (finish_reason={getattr(cand, 'finish_reason', None)}) — skipped, re-run to retry")
+        return False
     notes = []
-    for part in cands[0].content.parts:
+    for part in parts:
         data = getattr(part, "inline_data", None)
         if data and getattr(data, "data", None):
             img = Image.open(io.BytesIO(data.data)).convert("RGB")
             os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
             img.save(out_path)
-            return
+            return True
         if getattr(part, "text", None):
             notes.append(part.text)
-    # no image part — usually a safety refusal or a text-only reply
-    raise SystemExit(f"[nano] no image in response. Model said: {' '.join(notes)[:400] or '(nothing)'}")
+    print(f"[warn] no image in response ({' '.join(notes)[:200] or 'no detail'}) — skipped")
+    return False
 
 
 def _consistency_suffix() -> str:
@@ -135,7 +146,7 @@ def run_prompts(client, model: str, prompts_file: str, ref_paths: list[str],
     os.makedirs(out_dir, exist_ok=True)
     print(f"[nano] prompts={prompts_file} ({len(prompts)}) x{count} | model={model} | refs={ref_paths or 'none'}")
 
-    n = 0
+    n = made = failed = 0
     for i, p in enumerate(prompts, 1):
         for v in range(max(1, count)):
             n += 1
@@ -144,8 +155,14 @@ def run_prompts(client, model: str, prompts_file: str, ref_paths: list[str],
                 print(f"[skip] {out} exists (use --overwrite)")
                 continue
             print(f"[nano] {i:02d}/{len(prompts)} v{v + 1} -> {out}")
-            generate(client, model, p + suffix, refs, out)
-    print(f"[ok] {n} images -> {out_dir}")
+            if generate(client, model, p + suffix, refs, out):
+                made += 1
+            else:
+                failed += 1
+    msg = f"[ok] {made} new images -> {out_dir}"
+    if failed:
+        msg += f" | {failed} blocked/empty — just re-run the same command to fill the gaps"
+    print(msg)
 
 
 def main() -> None:
