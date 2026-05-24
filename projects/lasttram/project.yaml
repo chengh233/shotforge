@@ -24,35 +24,35 @@ shots:
   # 镜头1 · 拉远展开（疲惫·冷调）
   - id: s1
     frame: frames/s1.jpeg
-    frame_prompt: "Place the same girl sitting alone by the window inside a quiet, empty night tram, tired and slightly slumped; wide shot showing the carriage with warm ceiling lights and empty seats, dusk-blue city outside; cool, melancholic tone, 9:16 vertical."
+    frame_prompt: "Change the scene to a quiet night tram: the same girl sits alone by the window, looking tired and a little downcast; dim dusk-blue light outside, soft warm interior lamp, cool melancholic mood."
     prompt: "黄昏的末班电车车厢，少女独自靠窗而坐、肩膀微塌、神情疲惫；镜头从她的近景极缓地向后拉远并轻微下降，逐渐展开整节安静空荡的车厢，吊环随车身轻轻摇晃，窗外暮色中的城市楼影与暖橙夕照缓缓向后流过、光斑掠过空座椅，空气里浮尘轻飘；日系动漫赛璐璐风格，电影感长镜头。"
     dialogue: "末班车，又是我一个人。"
 
   # 镜头2 · 推近侧脸（出神）
   - id: s2
     frame: frames/s2.jpeg
-    frame_prompt: "The same girl, side-profile close-up gazing out the tram window with a weary, absent look; flowing city lights cast a cool moving glow on her face; shallow depth of field, cool tone, 9:16 vertical."
+    frame_prompt: "The same girl gazes out the dark tram window, weary and absent-minded; deeper night outside, cool blue light and faint neon reflections on her face."
     prompt: "镜头缓缓推近到少女的侧脸特写，她疲惫地望向窗外、微微出神；窗外流动的霓虹灯火在她脸颊与睫毛上投下游移的光斑，刘海与碎发被微风轻轻吹动，她极轻地眨了一下眼、呼吸轻微起伏；浅景深、背景虚化，日系动漫电影感。"
     dialogue: "今天，也没什么特别的。"
 
   # 镜头3 · 横移视差（孤独）
   - id: s3
     frame: frames/s3.jpeg
-    frame_prompt: "The same girl leaning by the tram window which fills much of the frame; outside, night-city lights, platforms and tree silhouettes; her eyes follow the view, faint loneliness; cool night tone, leave space for the window, 9:16 vertical."
+    frame_prompt: "The same girl leans against the tram window with a faint, lonely expression; dark city night outside with streaking neon lights, cool blue tone."
     prompt: "镜头沿车窗向左缓缓横移（轨道移动），窗外的城市灯火、站台灯箱与行道树以明显的视差快速向后掠过，玻璃上倒映着流动的光带；少女靠在窗边，眼神随光影缓缓移动，发丝轻颤；夜色霓虹、略带寂寥，日系动漫风格。"
     dialogue: "回去，也只是空荡荡的房间。"
 
   # 镜头4 · 手机特写（转折点·冷光）
   - id: s4
     frame: frames/s4.jpeg
-    frame_prompt: "Close-up of the same girl's hands holding a phone that lights up with a message notification (no readable text); cold blue screen glow on her fingers and lower face, her gaze drawn to the screen; shallow depth of field, warm blurred carriage behind, 9:16 vertical."
+    frame_prompt: "The same girl looks down at her phone glowing with a new message, a flicker of surprise softening her face; cold blue screen light on her face, dark interior around her."
     prompt: "特写：少女手中的手机屏幕亮起一条消息通知，冷蓝色屏幕光骤然打亮她的手指与下半张脸；镜头极轻微地推近，她的视线落到屏幕、瞳孔微微一缩、指尖轻轻一动；背景车厢暖光虚化成柔和光斑，浅景深，日系动漫风格。"
     dialogue: "「到家了说一声，明天一起吃饭。」"
 
   # 镜头5 · 抬头微笑（反转·转暖）
   - id: s5
     frame: frames/s5.jpeg
-    frame_prompt: "The same girl lifting her head from the phone to look out the window, her tired expression softening into a gentle warm smile; warm tram lighting on her face, noticeably warmer than before; tender close shot, 9:16 vertical."
+    frame_prompt: "The same girl looks up from the phone with a soft, warm, relieved smile, gentle eyes; warm golden interior light on her face, tender mood."
     prompt: "少女缓缓从手机抬起头、望向窗外，紧绷的神情一点点化开，嘴角浮起一抹温柔的微笑、眼里泛起暖意；镜头轻轻推近，车厢暖光渐渐铺满她的脸（光色由冷转暖），发丝随抬头动作轻轻扬起，日系动漫电影感。"
     dialogue: "啊……原来，不是一个人。"
 
@@ -60,6 +60,6 @@ shots:
   - id: s6
     frame: frames/s6.jpeg
     seconds: 6
-    frame_prompt: "The same girl looking out at a brightening sky after the rain, a relieved tender expression; warm light pours through the window into the carriage, bright and clear, contrasting the earlier cool tone; slightly wider shot, lots of negative space, 9:16 vertical."
+    frame_prompt: "The same girl by the window in bright, clear morning light after the rain; calm and hopeful expression, soft warm daylight, blue sky outside — a warm contrast to the earlier cool night."
     prompt: "雨渐渐停歇，乌云裂开一道缝、暖光透过沾着残余雨珠的车窗洒进车厢，光束里浮尘缓缓飘动；镜头极缓地向后拉远并轻微上摇，少女安静地望向窗外渐亮的天色、神情释然温柔；窗上残留的雨痕缓缓滑落，柔和暖色调，日系动漫电影感。"
     dialogue: "明天，会是好天气吧。"

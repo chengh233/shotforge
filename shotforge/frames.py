@@ -95,7 +95,8 @@ def _download(server: str, info: dict, out_path: str) -> None:
         fh.write(resp.content)
 
 
-def render_frame(workflow: dict, server: str, ref_image: str, prompt: str, out_path: str, seed: int = 0) -> None:
+def render_frame(workflow: dict, server: str, ref_image: str, prompt: str, out_path: str,
+                 seed: int = 0, guidance: float | None = None) -> None:
     wf = copy.deepcopy(workflow)
 
     loaders = _ids(wf, "LoadImage")
@@ -121,6 +122,13 @@ def render_frame(workflow: dict, server: str, ref_image: str, prompt: str, out_p
             elif "noise_seed" in inp and inp.get("add_noise", "enable") != "disable":
                 inp["noise_seed"] = seed
 
+    # higher Kontext guidance => follows the edit prompt harder (more scene /
+    # expression change vs. just preserving the reference)
+    if guidance is not None:
+        for n in wf.values():
+            if n.get("class_type") == "FluxGuidance":
+                n["inputs"]["guidance"] = guidance
+
     outputs = _wait(server, _queue(server, wf))
     _download(server, _find_image(outputs), out_path)
 
@@ -131,6 +139,8 @@ def main() -> None:
     ap.add_argument("--comfy-url", default="http://127.0.0.1:8188")
     ap.add_argument("--workflow", default="comfyui/flux_kontext_api.json")
     ap.add_argument("--shot", default=None, help="generate only this shot id")
+    ap.add_argument("--guidance", type=float, default=3.5,
+                    help="Flux Kontext guidance — higher follows the edit prompt harder (~2.5 is the default)")
     ap.add_argument("--dump", default=None, help="just print node ids/classes of a workflow file")
     args = ap.parse_args()
 
@@ -169,7 +179,8 @@ def main() -> None:
         # The frame_prompt describes only what changes (scene / framing / expression).
         out_path = shot.frame  # already joined to the project dir by load_project
         print(f"[frame] {shot.id} (seed={shot.seed + i}) -> {out_path}")
-        render_frame(workflow, args.comfy_url, project.character_ref, shot.frame_prompt, out_path, seed=shot.seed + i)
+        render_frame(workflow, args.comfy_url, project.character_ref, shot.frame_prompt, out_path,
+                     seed=shot.seed + i, guidance=args.guidance)
     print("[ok] frames done")
 
 
