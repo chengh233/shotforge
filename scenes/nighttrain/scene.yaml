@@ -2,7 +2,7 @@
 # 和 characters/ 并列：characters=演员(谁)，scenes=布景(在哪)。
 name: 末班电车车厢
 # description：英文，只写「这个地方长什么样」（画风交给 styles/）。强调纵深/空间感。
-description: "interior of a quiet late-night tram carriage seen in deep one-point perspective looking down the central aisle toward the doors at the far end; long bench seats along both sides under large dark windows, a receding row of warm ceiling lights overhead, worn hanging handrail straps; mostly empty, strong sense of depth and space, deep night outside the windows"
+description: "interior of a quiet late-night Japanese commuter TRAIN carriage (densha) seen in deep one-point perspective looking down the central aisle toward the doors at the far end; long bench seats along both sides under large dark train windows, a receding row of warm ceiling lights overhead, worn hanging handrail straps; mostly empty, strong sense of depth and space, the dark railway night (passing platforms / tracks) outside the windows"
 #
 # 固定布局约定（让各镜空间一致 —— 各 frame_prompt 按此标注位置）：
 #   · 小雪(女主)：车厢【左侧】靠窗，靠近镜头的【前景】

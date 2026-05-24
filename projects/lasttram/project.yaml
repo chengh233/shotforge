@@ -1,21 +1,21 @@
 # 一个 shotforge 项目 = 一部短剧。
 #
-# 剧本：《末班电车》—— 深夜末班车上，疲惫的女主与同车的夜归人（抱着孩子的妇人、戴耳机睡着的
-# 打工族）；在车窗倒影与手中的辞职信之间熬到天明，最后窗外日出，新的一天开始。
-# 情绪线：疲惫 → 与夜归人共鸣 → 看清自己 → 下定决心 → 希望。
+# 剧本：《末班电车》—— 深夜末班列车上，疲惫的女主与同车的夜归人（抱着孩子的妇人、戴耳机睡着的
+# 打工族）；在车窗倒影与手中的辞职信之间熬到天将亮，最终下定决心。
+# 情绪线：疲惫 → 与夜归人共鸣 → 看清自己 → 下定决心。
 #
 # 解耦：演员=cast(characters/) 布景=scene(scenes/) 画风=style(styles/) 运镜=camera(cameras.py)。
 #   - frame_prompt 只写「画面内容」，画风由 style 统一补；
 #   - prompt 只写「画面动作」，运镜由 camera 提供、画风的 video_suffix 收尾。
-# 出帧参考图：女主出镜(s1/s4/s5) 用小雪+车厢两张参考图；其他(s2/s3/s6) 只用车厢参考图、不画小雪。
-# 时间线：s1–s4 深夜 → s5 凌晨约5点天将亮 → s6 日出清晨。
+# 出帧参考图：女主出镜(s1/s4/s5) 用小雪+车厢两张参考图；其他(s2/s3) 只用车厢参考图、不画小雪。
+# 时间线：s1–s4 深夜 → s5 凌晨约5点天将亮。
 
 project: 末班电车
 model: wan-480p          # 480P 草稿(快)；定稿换 wan(720P)
 fps: 16
 
 cast: yuki               # 演员：小雪（声音用于旁白，参考图用于她出镜的镜头）
-scene: nighttram         # 布景：末班电车车厢（参考图喂给每一镜，锁同一节车厢+画幅）
+scene: nighttrain         # 布景：末班电车车厢（参考图喂给每一镜，锁同一节车厢+画幅）
 style: kyoani            # 画风：京阿尼（拼到出图/运镜提示词，换一行即换风格）
 
 defaults:
@@ -29,7 +29,7 @@ shots:
   - id: s1
     frame: frames/s1.jpeg
     camera: push_in
-    frame_prompt: "Medium three-quarter shot looking down the night tram aisle: the same girl sits on the LEFT-side bench in the foreground close to camera, leaning her head against the dark window, gazing outside; her expression weary and melancholic, eyes half-lowered. Behind her the empty carriage recedes in deep perspective — rows of empty seats and a receding line of warm ceiling lights; strong sense of depth, dim warm light, deep black night outside; clean window glass with no reflection of her."
+    frame_prompt: "Medium three-quarter shot looking down the night train aisle: the same girl sits on the LEFT-side bench in the foreground close to camera, leaning her head against the dark window, gazing outside; her expression weary and melancholic, eyes half-lowered. Behind her the empty carriage recedes in deep perspective — rows of empty seats and a receding line of warm ceiling lights; strong sense of depth, dim warm light, deep black night outside; clean window glass with no reflection of her."
     prompt: "女主把头倚在冰凉的车窗玻璃上、望着窗外出神，发丝随车身轻轻晃动，窗外深夜的城市灯火与铁轨缓缓向后掠过；昏黄暖车灯、夜色冷调，浅景深"
     dialogue: "末班车的玻璃，凉凉的。"
 
@@ -38,7 +38,7 @@ shots:
     frame: frames/s2.jpeg
     use_ref: false
     camera: static
-    frame_prompt: "Medium shot looking diagonally across the night tram: a tired young mother sits on the RIGHT-side bench a few rows down the carriage (mid-ground), cradling a sleeping small child against her shoulder and gently patting its back; her own eyes half-closed with weary tenderness, head tilted slightly down. Empty seats in the foreground and a receding line of ceiling lights lead the eye to her, giving depth; dim warm light, deep black night outside; no reflection on the window glass."
+    frame_prompt: "Medium shot looking diagonally across the night train: a tired young mother sits on the RIGHT-side bench a few rows down the carriage (mid-ground), cradling a sleeping small child against her shoulder and gently patting its back; her own eyes half-closed with weary tenderness, head tilted slightly down. Empty seats in the foreground and a receding line of ceiling lights lead the eye to her, giving depth; dim warm light, deep black night outside; no reflection on the window glass."
     prompt: "对面座位的年轻妇人怀里抱着熟睡的孩子、轻轻拍哄，自己也疲惫地半阖着眼，随车身轻轻摇晃；深夜车厢暖光昏黄，窗外漆黑，安静温柔"
     dialogue: ""
 
@@ -55,7 +55,7 @@ shots:
   - id: s4
     frame: frames/s4.jpeg
     camera: static
-    frame_prompt: "Detailed close-up of the same girl's face reflected in the dark LEFT-side tram window at night — her tired, pensive expression mirrored faintly on the glass, eyes lowered, fine detail in her eyes, eyelashes and hair; behind the reflection, the dim carriage interior and faint streaking night lights are visible through the glass; cool, intimate tone, shallow depth of field."
+    frame_prompt: "Detailed close-up of the same girl's face reflected in the dark LEFT-side train window at night — her tired, pensive expression mirrored faintly on the glass, eyes lowered, fine detail in her eyes, eyelashes and hair; behind the reflection, the dim carriage interior and faint streaking night lights are visible through the glass; cool, intimate tone, shallow depth of field."
     prompt: "女主映在漆黑车窗玻璃上的倒影若隐若现，疲惫出神的脸、睫毛与发丝纤毫毕现；玻璃外深夜的点点灯火透过倒影缓缓流动，她极轻地眨了一下眼；冷色调、安静细腻"
     dialogue: "玻璃里的我，原来这么累。"
 
@@ -66,13 +66,3 @@ shots:
     frame_prompt: "Medium close-up of the same girl in her LEFT-side window seat, looking down at a folded letter held in both hands (plain paper, no readable text); her expression quiet, tired but resolved, a faint steadiness in her lowered eyes; the dim carriage softly blurred behind her with a hint of receding seats; pre-dawn around 5am, the sky outside the window just lightening to deep blue."
     prompt: "女主低头凝视手中的辞职信（素纸、没有可辨认的文字），指尖微微收紧，神情平静而坚定；凌晨五点，窗外天色刚泛起深蓝微光，车厢昏暗"
     dialogue: "握了一整夜的信……天，快亮了。"
-
-  # 镜头6 · 主人公视角·窗外日出（清晨·主人公不出镜·铁轨声）【只用车厢·不画小雪】
-  - id: s6
-    frame: frames/s6.jpeg
-    seconds: 6
-    use_ref: false
-    camera: pull_back_tilt
-    frame_prompt: "First-person POV from the girl's LEFT-side window seat looking out at dawn, no person in frame — the lower edge of the dark window frame and a hint of the carriage interior in the foreground; outside, the sun slowly rising over a distant horizon, railway tracks stretching toward it in deep perspective, warm golden morning light flooding across the fields and into the carriage; hopeful, serene, strong sense of depth."
-    prompt: "主人公视角望向窗外（画面中没有人物），地平线上太阳正缓缓升起，铁轨向远方延伸，暖金色的晨光铺满原野、漫进车厢，伴随车轮与铁轨规律的咔哒声响；通透、充满希望"
-    dialogue: "新的一天，开始了。"
