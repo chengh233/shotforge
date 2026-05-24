@@ -35,6 +35,7 @@ shots:
   # 镜头2 · 对面妇人抱着熟睡的孩子（深夜）【不用小雪参考图】
   - id: s2
     frame: frames/s2.jpeg
+    use_ref: false           # 不用小雪参考图（不同的人）
     frame_prompt: "Medium shot across the night tram aisle of a tired young mother holding a sleeping small child in her arms on the opposite seat; dim warm interior light, deep black night outside the windows; gentle, weary tenderness; no reflection on the window glass; Kyoto Animation (KyoAni) anime style, soft cel shading."
     prompt: "镜头对着对面座位的年轻妇人，她怀里抱着熟睡的孩子、轻轻拍哄，自己也疲惫地半阖着眼，身体随车身轻轻摇晃；深夜车厢暖光昏黄，窗外漆黑，安静温柔，日系动漫电影感。"
     dialogue: ""
@@ -42,6 +43,7 @@ shots:
   # 镜头3 · 戴耳机睡着的打工族（深夜·背景音乐从这里起）【不用小雪参考图】
   - id: s3
     frame: frames/s3.jpeg
+    use_ref: false           # 不用小雪参考图（不同的人）
     frame_prompt: "Medium shot of an exhausted night-shift worker, a young man in plain work clothes wearing earphones, slumped asleep against the tram window with his head tilted; deep night outside, dim warm carriage light; quiet and tired; no reflection on the glass; Kyoto Animation (KyoAni) anime style, soft cel shading."
     prompt: "镜头对着靠窗睡着的打工族青年，他戴着耳机、头歪靠在车窗上沉沉睡去，胸口随呼吸微微起伏、耳机线轻晃，窗外深夜飞掠；昏黄车灯、安静，日系动漫电影感。"
     dialogue: ""              # 背景歌曲从这一镜起：post 阶段用 --music <歌>.mp3
@@ -64,6 +66,7 @@ shots:
   - id: s6
     frame: frames/s6.jpeg
     seconds: 6
+    use_ref: false           # 不用小雪参考图（空镜·主人公不出镜）
     frame_prompt: "First-person POV looking out the tram window at dawn, no person in frame — the sun slowly rising over the horizon, railway tracks stretching toward it, warm golden morning light spilling across the fields and into the empty carriage; hopeful, serene; Kyoto Animation (KyoAni) anime style, soft cel shading."
     prompt: "主人公视角望向窗外（画面中没有人物），地平线上太阳正缓缓升起，铁轨向远方延伸，暖金色的晨光铺满原野、漫进车厢，伴随车轮与铁轨规律的咔哒声响；通透、充满希望，日系动漫电影感。"
     dialogue: "新的一天，开始了。"

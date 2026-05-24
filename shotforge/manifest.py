@@ -28,7 +28,8 @@ class Shot:
     seed: int = 0
     negative: str = ""
     dialogue: str = ""       # spoken line / narration for this shot (TTS + subtitles)
-    frame_prompt: str = ""   # English edit instruction to GENERATE this shot's frame (Flux Kontext)
+    frame_prompt: str = ""   # English prompt to GENERATE this shot's frame
+    use_ref: bool = True     # generate WITH the character reference (False = extras/scenery: no ref, no protagonist)
 
 
 @dataclass
@@ -96,6 +97,7 @@ def load_project(path: str) -> Project:
                 negative=str(merged.get("negative", Shot.negative)),
                 dialogue=str(merged.get("dialogue", Shot.dialogue)),
                 frame_prompt=str(merged.get("frame_prompt", Shot.frame_prompt)),
+                use_ref=bool(merged.get("use_ref", Shot.use_ref)),
             )
         )
 

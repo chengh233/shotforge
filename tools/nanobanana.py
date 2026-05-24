@@ -124,16 +124,23 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
         if not shot.frame_prompt.strip():
             print(f"[skip] {shot.id}: no frame_prompt")
             continue
-        prompt = ", ".join(x for x in (appearance, shot.frame_prompt.strip()) if x)
-        prompt = f"{prompt}. {_consistency_suffix()}"
+        if shot.use_ref:
+            this_refs = refs
+            prompt = ", ".join(x for x in (appearance, shot.frame_prompt.strip()) if x)
+            prompt = f"{prompt}. {_consistency_suffix()}"
+        else:
+            # extras / scenery: no character reference, no protagonist appearance prefix
+            this_refs = []
+            prompt = f"{shot.frame_prompt.strip()} Vertical 9:16 composition."
         base, ext = os.path.splitext(shot.frame)
         for v in range(max(1, variations)):
             out = shot.frame if variations <= 1 else f"{base}_{v + 1}{ext}"
             if os.path.isfile(out) and not overwrite:
                 print(f"[skip] {out} exists (use --overwrite)")
                 continue
-            print(f"[nano] {shot.id}{'' if variations <= 1 else f' v{v + 1}'} -> {out}")
-            generate(client, model, prompt, refs, out)
+            tag = "" if variations <= 1 else f" v{v + 1}"
+            print(f"[nano] {shot.id}{tag} ({'ref' if shot.use_ref else 'no-ref'}) -> {out}")
+            generate(client, model, prompt, this_refs, out)
     print("[ok] frames done")
 
 
