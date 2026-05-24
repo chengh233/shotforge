@@ -45,14 +45,14 @@ shots:
   # 镜头4 · 窗外万家灯火（转折点·暖光乍现）
   - id: s4
     frame: frames/s4.jpeg
-    frame_prompt: "Over-the-shoulder shot from behind the same girl as she turns to the window; outside, a sweeping night view of a hillside covered in countless warm twinkling house lights fills the window; quiet wonder, warm golden glow on her face."
+    frame_prompt: "Over-the-shoulder shot from behind the same girl inside the night tram as she turns to the tram window; outside the window, a sweeping night view of a hillside covered in countless warm twinkling house lights; the dim tram carriage around her, quiet wonder, warm golden glow on her face."
     prompt: "镜头越过少女的肩头缓缓推近车窗，窗外山坡上层层叠叠的万家灯火在夜色里温暖闪烁、随车身缓缓向后流动，暖金色的光晕映在她的侧脸与睫毛上；她微微睁大眼睛、神情怔住、呼吸一滞，发丝轻动；冷色调中透出暖意，日系动漫电影感。"
     dialogue: "……那么多，温暖的灯火。"
 
   # 镜头5 · 神情转暖（反转·转暖）
   - id: s5
     frame: frames/s5.jpeg
-    frame_prompt: "Medium close-up of the same girl watching the distant lights, her weary expression softening into a warm, gentle smile with tender eyes; warm golden light on her face, hopeful."
+    frame_prompt: "Medium close-up of the same girl inside the night tram, watching the warm distant lights through the tram window, her weary expression softening into a warm, gentle smile with tender eyes; the tram carriage softly behind her, warm golden light on her face, hopeful."
     prompt: "少女静静望着窗外的万家灯火，紧绷的神情一点点化开，嘴角浮起一抹温柔的微笑、眼里泛起暖意；镜头轻轻推近她的脸，窗外暖金的光晕渐渐铺满她的面庞（光色由冷转暖），发丝随车身轻晃，日系动漫电影感。"
     dialogue: "每一盏灯下，都有人在等谁回家吧。"
 
@@ -60,6 +60,6 @@ shots:
   - id: s6
     frame: frames/s6.jpeg
     seconds: 6
-    frame_prompt: "Medium shot of the same girl by the window in bright, clear morning light after the rain; calm and hopeful, soft warm daylight and blue sky outside — a warm contrast to the earlier cool night."
+    frame_prompt: "Medium shot of the same girl inside the tram, sitting by the tram window in bright clear morning light after the rain; the tram carriage and empty seats around her, calm and hopeful, soft warm daylight and blue sky outside the window — a warm contrast to the earlier cool night."
     prompt: "雨渐渐停歇，乌云裂开一道缝、暖光透过沾着残余雨珠的车窗洒进车厢，光束里浮尘缓缓飘动；镜头极缓地向后拉远并轻微上摇，少女安静地望向窗外渐亮的天色、神情释然温柔；窗上残留的雨痕缓缓滑落，柔和暖色调，日系动漫电影感。"
     dialogue: "明天，会是好天气吧。"
