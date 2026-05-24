@@ -30,10 +30,12 @@ async def _say(text: str, voice: str, path: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description="TTS each shot's dialogue (edge-tts).")
     ap.add_argument("--project", required=True)
-    ap.add_argument("--voice", default="zh-CN-XiaoxiaoNeural")
+    ap.add_argument("--voice", default=None, help="edge-tts voice (default: cast character's voice)")
     args = ap.parse_args()
 
     project = load_project(args.project)
+    voice = args.voice or project.voice or "zh-CN-XiaoxiaoNeural"
+    print(f"[tts] voice = {voice}" + (f" (from cast '{project.cast}')" if project.voice and not args.voice else ""))
     adir = os.path.join(args.project, "out", "audio")
     os.makedirs(adir, exist_ok=True)
 
@@ -44,7 +46,7 @@ def main() -> None:
             continue
         path = os.path.join(adir, f"{shot.id}.mp3")
         print(f"[tts] {shot.id}: {shot.dialogue!r} -> {path}")
-        asyncio.run(_say(shot.dialogue, args.voice, path))
+        asyncio.run(_say(shot.dialogue, voice, path))
         n += 1
     print(f"[ok] {n} clips -> {adir}")
 

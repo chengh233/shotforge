@@ -27,7 +27,13 @@ new folder under `projects/`.
   person; per-shot **English** `frame_prompt` sets the scene. Auto-detects the
   workflow's LoadImage/CLIPTextEncode/SaveImage nodes. `scripts/flux_setup.py`
   installs the Kontext models. Run: `python run.py frames <project>`.
-- `run.py` — staged runner (`python run.py <setup|frames|video|dub|subs|post> ...`).
+- `shotforge/characters.py` + `characters/<id>/character.yaml` — reusable character
+  library ("actors"): appearance/personality/tone/voice/ref/lora. A project casts
+  one with `cast: <id>` (its appearance+ref feed `frames`, voice feeds `dub`;
+  explicit `character:`/`character_ref:` override). `shotforge/genref.py`
+  (`python run.py genref <id>`) generates a character's reference image
+  open-source via SDXL anime. See `docs/CHARACTERS.md`.
+- `run.py` — staged runner (`python run.py <setup|genref|frames|video|dub|subs|post> ...`).
 - `scripts/colab_setup.py` — one-command setup on a fresh Colab.
 - `docs/STAGES.md` — staged pipeline, what runs where (GPU only does video I2V;
   everything else on the Mac to save GPU time), per-stage view-artifact commands.

@@ -39,7 +39,9 @@ class Project:
     fps: int
     shots: list[Shot]
     character: str = ""       # shared character description (prepended to frame prompts)
-    character_ref: str = ""   # path (joined to project dir) to ONE reference image of the character
+    character_ref: str = ""   # path to ONE reference image of the character
+    cast: str = ""            # character-library id cast in this project (project.yaml `cast:`)
+    voice: str = ""           # TTS voice for the cast character (used by tools.dub)
 
 
 def frames_for(seconds: float, fps: int, quantum: int = 8) -> int:
@@ -99,8 +101,20 @@ def load_project(path: str) -> Project:
 
     name = str(data.get("project") or os.path.basename(os.path.abspath(path)))
     fps = int(data.get("fps", backend.default_fps))
+
+    # Casting: a character-library id provides appearance / reference / voice;
+    # explicit project-level fields (if set) take precedence over the cast values.
     character = str(data.get("character", ""))
     ref = data.get("character_ref")
     character_ref = os.path.join(path, str(ref)) if ref else ""
+    cast = str(data.get("cast", "") or "")
+    voice = ""
+    if cast:
+        from .characters import load_character
+        ch = load_character(cast)
+        character = character or ch.appearance
+        character_ref = character_ref or ch.ref
+        voice = ch.voice
+
     return Project(root=path, name=name, model=backend.name, fps=fps, shots=shots,
-                   character=character, character_ref=character_ref)
+                   character=character, character_ref=character_ref, cast=cast, voice=voice)

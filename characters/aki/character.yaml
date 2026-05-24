@@ -1,0 +1,8 @@
+# 角色库条目 —— 另一个"演员"，性格/声音与小雪互补，方便给不同剧情选角。
+name: 小秋
+appearance: "an anime cel-shaded teenage boy about 17 years old, messy brown hair, navy school uniform, lively expressive eyes, clean Japanese-anime style"
+personality: "开朗、话多、爱开玩笑，但偶尔流露真心；行动派"
+tone: "语速偏快、活泼、口语化，爱用感叹词"
+voice: zh-CN-YunxiNeural
+ref: ref.png
+lora: null

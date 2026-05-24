@@ -11,9 +11,8 @@ project: 末班电车
 model: wan-480p          # 480P 草稿(快)；定稿换 wan(720P)
 fps: 16
 
-# 角色设定：会拼到每个 frame_prompt 前面，保持一致。character_ref 指向那张参考图。
-character: "an anime cel-shaded girl about 18 years old, short black bob hair, beige trench coat with a light scarf, clear bright eyes, clean Japanese-anime style"
-character_ref: frames/_ref.png
+# 选角：从角色库选 yuki(小雪) 出演——她的外貌/参考图/声音会自动带入。换演员改这一行即可。
+cast: yuki
 
 defaults:
   steps: 40
