@@ -1,19 +1,15 @@
-# 验收 demo：咖啡馆两人对话。
-# 思路转变：不再生成「正反打的反打静帧」（太随机），而是
-#   只可靠地出【一张双人主镜静帧 s0】，再用 I2V 的【运镜】做覆盖：
-#   s1 相机推向右侧的男主(他说话)，s2 相机推向左侧的女主(她说话)。
-#   两段视频都从同一张 s0 动起来 → 空间天然一致，不靠易翻车的反打静帧。
-#
-# 配 Nano Banana Pro 出主镜；Wan I2V 负责移镜。
+# 验收 demo：咖啡馆两人对话（双人镜，避开易翻车的反打静帧）。
+# 剧情两拍：s1 男主走过来向女主打招呼；s2 男主坐下、开口请女主帮个忙。
+# 两镜都是双人入镜的画面，I2V 用运镜增强（s1 拉远展开迎接男主入画；s2 推近强调请求）。
 
 title: 咖啡馆对话
 fps: 16
 engines:
   image: nanobanana
-  image_model: gemini-3-pro-image-preview   # Nano Banana Pro（出双人主镜更稳）
+  image_model: gemini-3-pro-image-preview   # Nano Banana Pro
   video: wan
 
-cast: {A: yuki, B: aki}   # A=小雪(女,坐左)，B=小秋(男,坐右)
+cast: {A: yuki, B: aki}   # A=小雪(女,坐着)，B=小秋(男)
 scene: cafe
 style: kyoani
 
@@ -24,27 +20,24 @@ defaults:
   negative: "最差质量，低质量，多余的手指，畸形的手，畸形的脸，字幕，文字，水印，杂乱背景，三条腿"
 
 shots:
-  # 主镜 s0 · 唯一要生成的静帧（双人定场，不单独出片，作为 s1/s2 的起始帧）
-  - id: s0
-    frame: frames/s0.jpeg
-    still: true
-    subjects: [A, B]
-    content: "中景双人定场：午后咖啡馆靠窗的小木桌，A（小雪，女）坐在【左侧】、B（小秋，男）坐在【对面右侧】，两人隔着木桌相对而坐、面向彼此；旁边的大玻璃窗外有汽车与行人缓缓经过；暖色吊灯、温暖光线、浅景深，背景虚化的吧台。两人都清晰入镜。"
-
-  # 镜头1 · 从主镜推向右侧的 B（B 在说话）—— I2V 运镜，不再生成新静帧
+  # 镜头1 · 男主走过来打招呼（拉远展开、迎他入画）
   - id: s1
-    frame: frames/s0.jpeg     # 复用主镜作为起始帧
-    camera: push_right
-    subjects: []
+    frame: frames/s1.jpeg
+    camera: pull_back_reveal
+    subjects: [A, B]
     speaker: B
-    action: "镜头从双人中景缓缓推近右侧的 B，B 双手捧着咖啡杯、微微前倾、嘴唇在动正在说话；窗外车辆与行人缓缓经过，咖啡杯升起袅袅热气"
-    dialogue: "这家店，比我想象的还要安静。"
+    content: "咖啡馆靠窗的木桌：女主小雪坐着，男主小秋刚走到桌前向她打招呼（小秋站着、微微俯身，小雪抬头看他）；两人都清晰入镜；暖色光线，窗外有车与行人经过，浅景深。"
+    action:  "镜头从坐着的女主小雪缓缓向后拉远并展开画面，男主小秋从一侧走到桌前、停下，微笑着向小雪打招呼（点头、抬手致意），小雪抬头回应；午后暖光，窗外车辆与行人缓缓经过"
+    dialogue: "小雪，好久不见。"
 
-  # 镜头2 · 从主镜推向左侧的 A（A 在说话）
+  # 镜头2 · 男主坐下，开口请女主帮忙（缓缓推近、强调请求）
   - id: s2
-    frame: frames/s0.jpeg     # 同一张主镜起始帧 → 空间一致
-    camera: push_left
-    subjects: []
-    speaker: A
-    action: "镜头从双人中景缓缓推近左侧的 A，A 靠在椅背上、指尖轻搭杯沿、嘴唇在动正在回话，神情柔和带浅笑；窗外车辆与行人缓缓经过，热气浮动"
-    dialogue: "嗯……我也很久没有这么放松过了。"
+    frame: frames/s2.jpeg
+    base: s1
+    base_mode: reframe
+    camera: push_in
+    subjects: [A, B]
+    speaker: B
+    content: "保持 s1 中同一咖啡馆与两人相貌；男主小秋已在女主小雪对面坐下，两人隔着木桌相对而坐、面向彼此，小秋身体微微前倾、神情认真地在说话；两人都入镜；同样的暖光，窗外有车与行人经过。"
+    action:  "男主小秋在女主对面坐下、身体微微前倾，神情认真地开口说话——像是在请对方帮个忙；镜头缓缓推近小秋，强调他正在开口请求；窗外车辆与行人缓缓经过，咖啡升起袅袅热气"
+    dialogue: "其实……今天找你，是想请你帮个忙。"
