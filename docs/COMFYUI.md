@@ -2,7 +2,36 @@
 
 diffusers 的 Wan 图生视频出图融化/崩坏（我们试了 fp32 VAE、CLIPVisionModel、auto-resolution、升级 diffusers 都没解决——这是 diffusers Wan I2V 实现本身的已知质量问题）。**ComfyUI 用的是另一套、社区公认更好的 Wan 实现**，是高质量 Wan 视频的主流路径。
 
-方案 B = **shotforge 继续做编排（剧本/批量/拼接），渲染换成调 ComfyUI**。分两步：先在 Colab 上把 ComfyUI 跑通、手动验证质量（Phase 1），再把 shotforge 接到它的 API（Phase 2）。
+方案 B = **shotforge 继续做编排（剧本/批量/拼接），渲染换成调 ComfyUI**。
+
+---
+
+## TL;DR：完整操作步骤（端到端，全部在 Colab 上跑）
+
+```bash
+# A) 一次性安装（装过可跳过）
+cd /content/shotforge && git pull
+bash scripts/comfyui_setup.sh        # ComfyUI + Wan 模型
+pip install requests
+
+# B) 后台启动 ComfyUI 服务，并等它就绪
+bash scripts/comfyui_serve.sh        # 打印 "ComfyUI up on :8188" 才算好
+
+# C) 确认 B 起来后，用 shotforge 调它渲染
+python -m shotforge.generate --project projects/example --engine comfy --shot s1
+# 全部镜头 + 拼接：
+python -m shotforge.generate --project projects/example --engine comfy
+python -m tools.stitch       --project projects/example
+```
+
+**最常见错误 `Connection refused (127.0.0.1:8188)` = ComfyUI 服务没在跑。** 先跑 B、
+看到 `ComfyUI up on :8188` 再跑 C。手动检查：
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8188/   # 200 = 好
+tail -n 30 /content/comfyui.log                                   # 起不来就看日志
+```
+
+> 纯自动渲染**不需要** cloudflared 隧道；隧道只在你想从 Mac 浏览器看 GUI / 手动调工作流时才用（见下文 Phase 1）。
 
 ---
 
