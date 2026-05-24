@@ -15,12 +15,14 @@ class NanoBananaEngine:
         self._model = None
 
     def generate(self, spec: ImageSpec) -> None:
+        import os
         from tools.nanobanana import DEFAULT_MODEL, _client, _load_refs, generate
         if self._client is None:
             self._client = _client(None)
-            self._model = DEFAULT_MODEL
+        # read at generate-time so project `engines: image_model:` / $NANOBANANA_MODEL apply
+        model = os.environ.get("NANOBANANA_MODEL") or DEFAULT_MODEL
         refs = _load_refs(spec.refs)
-        generate(self._client, self._model, spec.prompt, refs, spec.out)
+        generate(self._client, model, spec.prompt, refs, spec.out)
 
 
 ENGINE = NanoBananaEngine()

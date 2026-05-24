@@ -18,6 +18,8 @@ from .manifest import load_project
 
 def run_frames(project_dir, engine=None, shot=None, variations=1, overwrite=False):
     project = load_project(project_dir)
+    if project.engines.get("image_model"):   # e.g. gemini-3-pro-image-preview (Nano Banana Pro)
+        os.environ["NANOBANANA_MODEL"] = project.engines["image_model"]
     name = engine or project.engines.get("image", "nanobanana")
     eng = get_engine("image", name)
     print(f"[frames] {project.name} | engine={name} | cast={project.cast_map} | scene={project.scene} | style={project.style}")
@@ -50,6 +52,9 @@ def run_video(project_dir, engine=None, shot=None):
     print(f"[video] {project.name} | engine={name} | fps={project.fps} | shots={len(project.shots)}")
     for s in project.shots:
         if shot and s.id != shot:
+            continue
+        if s.still:
+            print(f"[skip] {s.id}: still master (not animated)")
             continue
         if not os.path.isfile(s.frame):
             print(f"[skip] {s.id}: frame not found -> {s.frame}")

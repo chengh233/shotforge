@@ -1,16 +1,20 @@
 # 验收 demo：咖啡馆两人对话（正反打 / shot-reverse-shot）。
-# 证明：多角色 cast + 每镜 subjects/speaker + 按说话人配音 + 共享场景一致 全部成立。
+# 只有 2 个出片镜头(s1/s2) + 1 个不出片的「主镜 s0」用来锁定空间。
 #
-# 解耦：cast(演员) / scene(布景) / style(画风) / camera(运镜) 都只引用素材库 id。
-# s1 从 A 视角看 B（B 说话）；s2 反打，从 B 视角看 A（A 说话）。
+# 空间一致性的关键：先用 s0 主镜把「谁坐哪、木桌、窗户」一次定死（不出片），
+# 再让 s1/s2 都 base 在 s0 上重新取景 —— 两个视角共享同一空间。
+# 配 Nano Banana Pro(gemini-3-pro-image-preview)：多图参考 + 多人一致 + 空间推理更强。
 
 title: 咖啡馆对话
 fps: 16
-engines: {image: nanobanana, video: wan}   # 可换：image 改 flux-kontext 等
+engines:
+  image: nanobanana
+  image_model: gemini-3-pro-image-preview   # Nano Banana Pro（空间/一致性更强）
+  video: wan
 
-cast: {A: yuki, B: aki}   # 两个演员（各自参考图/声音）：A=小雪(女), B=小秋(男)
-scene: cafe               # 共享布景
-style: kyoani             # 共享画风
+cast: {A: yuki, B: aki}   # A=小雪(女)，B=小秋(男)
+scene: cafe
+style: kyoani
 
 defaults:
   steps: 40
@@ -19,22 +23,32 @@ defaults:
   negative: "最差质量，低质量，多余的手指，畸形的手，畸形的脸，字幕，文字，水印，杂乱背景，三条腿"
 
 shots:
-  # 镜头1 · 从 A 视角看 B，B 在说话
+  # 主镜 s0 · 定场（不出片，只用来锁空间）：一次定死座位/木桌/窗户
+  - id: s0
+    frame: frames/s0.jpeg
+    still: true
+    subjects: [A, B]
+    content: "中景定场：午后咖啡馆靠窗的小木桌，A（小雪，女）坐在【左侧】、B（小秋，男）坐在【对面右侧】，两人隔着木桌相对而坐；旁边的大玻璃窗外有汽车与行人缓缓经过；暖色吊灯、温暖光线、浅景深，背景虚化的吧台。把两人的相貌、这张桌位与窗户的空间关系一次确定下来。"
+    dialogue: ""
+
+  # 镜头1 · 越过 A 的肩看 B，B 在说话
   - id: s1
     frame: frames/s1.jpeg
+    base: s0
     camera: ots
-    subjects: [B]           # 画面主体=小秋；A 的肩在前景
-    speaker: B              # → 用 B(小秋) 的声音
-    content: "咖啡馆靠窗的木桌前，越过 A 的肩头（A 的后脑与肩在前景、虚化）看向对面坐着的 B；B 双手捧着咖啡杯、身体微微前倾正在说话，神情温和认真；午后暖光，窗外街景虚化，浅景深。"
-    action:  "B 嘴唇在动、偶尔点头，咖啡杯升起袅袅热气，光影轻微浮动"
+    subjects: [B]
+    speaker: B
+    content: "保持 s0 中的咖啡馆、同一张木桌与窗户、两人各自的座位；重新取景为越过【左侧】A 的肩头（A 的后脑与肩在前景、虚化）看向【右侧】坐着的 B；B 双手捧着咖啡杯、微微前倾正在说话，神情温和认真；窗外有车与行人经过。"
+    action:  "B 嘴唇在动、偶尔点头，窗外车辆与行人缓缓经过，咖啡杯升起袅袅热气"
     dialogue: "这家店，比我想象的还要安静。"
 
-  # 镜头2 · 反打：从 B 视角看 A，A 在说话
+  # 镜头2 · 反打：越过 B 的肩看 A，A 在说话
   - id: s2
     frame: frames/s2.jpeg
+    base: s0
     camera: ots
-    subjects: [A]           # 画面主体=小雪；B 的肩在前景
-    speaker: A              # → 用 A(小雪) 的声音
-    content: "反打：越过 B 的肩头（B 的后脑与肩在前景、虚化）看向对面坐着的 A；A 靠在椅背上、指尖轻搭杯沿，正在回话，神情柔和、带一点浅笑；同一张木桌、同样的午后暖光，浅景深。"
-    action:  "A 嘴唇在动、轻轻笑了一下，发丝微动，热气浮动"
+    subjects: [A]
+    speaker: A
+    content: "反打：保持 s0 中同一咖啡馆、同一张木桌与窗户、两人各自的座位；重新取景为越过【右侧】B 的肩头（B 的后脑与肩在前景、虚化）看向【左侧】坐着的 A；A 靠在椅背上、指尖轻搭杯沿正在回话，神情柔和、带一点浅笑；窗外有车与行人经过。"
+    action:  "A 嘴唇在动、轻轻笑了一下，窗外车辆与行人缓缓经过，热气浮动"
     dialogue: "嗯……我也很久没有这么放松过了。"
