@@ -81,6 +81,7 @@ def _queue(server: str, workflow: dict, client_id: str) -> str:
 
 def _wait(server: str, prompt_id: str, timeout: float = 3600.0) -> dict:
     start = time.time()
+    beat = 0.0
     while True:
         hist = requests.get(f"{server}/history/{prompt_id}", timeout=30).json()
         entry = hist.get(prompt_id)
@@ -89,8 +90,13 @@ def _wait(server: str, prompt_id: str, timeout: float = 3600.0) -> dict:
             if status.get("status_str") == "error":
                 raise SystemExit(f"[comfy] render failed: {json.dumps(status, ensure_ascii=False)[:1000]}")
             if entry.get("outputs"):
+                print(f"[comfy] done in {time.time() - start:.0f}s")
                 return entry["outputs"]
-        if time.time() - start > timeout:
+        elapsed = time.time() - start
+        if elapsed - beat >= 10:
+            print(f"[comfy]   …rendering ({elapsed:.0f}s; `tail /content/comfyui.log` for step progress)")
+            beat = elapsed
+        if elapsed > timeout:
             raise SystemExit(f"[comfy] timed out after {timeout:.0f}s waiting for {prompt_id}")
         time.sleep(2)
 
