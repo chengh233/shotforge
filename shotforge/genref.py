@@ -106,13 +106,33 @@ def main() -> None:
     prompt = f"{ch.appearance}, upper body portrait, clean background, 9:16 vertical, masterpiece, best quality"
 
     wf = copy.deepcopy(_load(args.workflow))
-    encs = _ids(wf, "CLIPTextEncode")
-    if not encs:
-        raise SystemExit("[genref] no CLIPTextEncode node in the workflow")
-    target = max(encs, key=lambda nid: len(str(wf[nid]["inputs"].get("text", ""))))
-    wf[target]["inputs"]["text"] = prompt
-    for nid in _ids(wf, "KSampler"):
-        wf[nid]["inputs"]["seed"] = args.seed
+
+    # Inject the prompt into every POSITIVE encoder — those feeding a sampler's
+    # `positive` input (handles base+refiner workflows with several encoders).
+    # Fall back to the single / longest-text CLIPTextEncode if no links found.
+    positives = set()
+    for n in wf.values():
+        if str(n.get("class_type", "")).startswith("KSampler"):
+            link = n.get("inputs", {}).get("positive")
+            if isinstance(link, list) and link:
+                positives.add(str(link[0]))
+    encoders = _ids(wf, "CLIPTextEncode")
+    targets = [p for p in positives if wf.get(p, {}).get("class_type") == "CLIPTextEncode"]
+    if not targets:
+        if not encoders:
+            raise SystemExit("[genref] no CLIPTextEncode node in the workflow")
+        targets = [max(encoders, key=lambda nid: len(str(wf[nid]["inputs"].get("text", ""))))]
+    for nid in targets:
+        wf[nid]["inputs"]["text"] = prompt
+
+    # set the seed on every sampler (KSampler uses `seed`, KSamplerAdvanced `noise_seed`)
+    for n in wf.values():
+        if str(n.get("class_type", "")).startswith("KSampler"):
+            inp = n["inputs"]
+            if "seed" in inp:
+                inp["seed"] = args.seed
+            elif "noise_seed" in inp and inp.get("add_noise", "enable") != "disable":
+                inp["noise_seed"] = args.seed
 
     print(f"[genref] {ch.id}: {prompt[:70]}... -> {out_path}")
     _download(args.comfy_url, _wait(args.comfy_url, _queue(args.comfy_url, wf)), out_path)
