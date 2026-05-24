@@ -1,9 +1,14 @@
 # 场景库条目 —— 一个可复用的"布景"。剧本里用 `scene: nighttram` 选它。
 # 和 characters/ 并列：characters=演员(谁)，scenes=布景(在哪)。
 name: 末班电车车厢
-# description：英文，只写「这个地方长什么样」（画风交给 styles/）。
-description: "interior of a quiet late-night tram carriage, warm dim ceiling lights, rows of empty seats, hanging handrail straps, large dark windows reflecting the night"
-# ref：一张该场景的参考图（空车厢即可），竖构图 9:16。
-#   生成一张：在 nano banana 里用 description 出一张空车厢图（9:16），存成下面这个文件。
-#   出帧时它会作为"布景参考图"喂给每一镜，锁住同一节车厢 + 画风 + 画幅。
+# description：英文，只写「这个地方长什么样」（画风交给 styles/）。强调纵深/空间感。
+description: "interior of a quiet late-night tram carriage seen in deep one-point perspective looking down the central aisle toward the doors at the far end; long bench seats along both sides under large dark windows, a receding row of warm ceiling lights overhead, worn hanging handrail straps; mostly empty, strong sense of depth and space, deep night outside the windows"
+#
+# 固定布局约定（让各镜空间一致 —— 各 frame_prompt 按此标注位置）：
+#   · 小雪(女主)：车厢【左侧】靠窗，靠近镜头的【前景】
+#   · 妇人+孩子：车厢【右侧】、往里几排的【中景】（斜对面）
+#   · 打工族：    车厢【左侧】最里端的【远景/背景】，靠窗瘫睡
+#   相机多沿过道纵向看，前景空座 → 中景 → 远景，制造景深。
+#
+# ref：一张空车厢参考图（竖构图 9:16，强纵深）。重生成提示词见 README/对话。
 ref: ref.png

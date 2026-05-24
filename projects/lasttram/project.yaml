@@ -29,7 +29,7 @@ shots:
   - id: s1
     frame: frames/s1.jpeg
     camera: push_in
-    frame_prompt: "Medium three-quarter shot of the same girl leaning against the tram window late at night, her head resting on the cool glass, gazing outside lost in thought; a quiet, almost empty carriage with dim warm interior light, deep black night and faint distant city lights outside; clean window glass with no reflection of her."
+    frame_prompt: "Medium three-quarter shot looking down the night tram aisle: the same girl sits on the LEFT-side bench in the foreground close to camera, leaning her head against the dark window, gazing outside; her expression weary and melancholic, eyes half-lowered. Behind her the empty carriage recedes in deep perspective — rows of empty seats and a receding line of warm ceiling lights; strong sense of depth, dim warm light, deep black night outside; clean window glass with no reflection of her."
     prompt: "女主把头倚在冰凉的车窗玻璃上、望着窗外出神，发丝随车身轻轻晃动，窗外深夜的城市灯火与铁轨缓缓向后掠过；昏黄暖车灯、夜色冷调，浅景深"
     dialogue: "末班车的玻璃，凉凉的。"
 
@@ -38,7 +38,7 @@ shots:
     frame: frames/s2.jpeg
     use_ref: false
     camera: static
-    frame_prompt: "Medium shot across the night tram aisle of a tired young mother holding a sleeping small child in her arms on the opposite seat; dim warm interior light, deep black night outside the windows; gentle, weary tenderness; no reflection on the window glass."
+    frame_prompt: "Medium shot looking diagonally across the night tram: a tired young mother sits on the RIGHT-side bench a few rows down the carriage (mid-ground), cradling a sleeping small child against her shoulder and gently patting its back; her own eyes half-closed with weary tenderness, head tilted slightly down. Empty seats in the foreground and a receding line of ceiling lights lead the eye to her, giving depth; dim warm light, deep black night outside; no reflection on the window glass."
     prompt: "对面座位的年轻妇人怀里抱着熟睡的孩子、轻轻拍哄，自己也疲惫地半阖着眼，随车身轻轻摇晃；深夜车厢暖光昏黄，窗外漆黑，安静温柔"
     dialogue: ""
 
@@ -47,7 +47,7 @@ shots:
     frame: frames/s3.jpeg
     use_ref: false
     camera: static
-    frame_prompt: "Medium shot of an exhausted night-shift worker, a young man in plain work clothes wearing earphones, slumped asleep against the tram window with his head tilted; deep night outside, dim warm carriage light; quiet and tired; no reflection on the glass."
+    frame_prompt: "Wider shot looking down the aisle toward the FAR end of the carriage: an exhausted night-shift worker, a young man in plain work clothes with earphones on, sits slumped against the window at the far LEFT (background), head tilted back, fast asleep with a deeply tired, slack expression. Empty seats and a receding line of warm ceiling lights stretch from the foreground toward him for strong depth; dim warm light, deep black night outside; no reflection on the glass."
     prompt: "靠窗的打工族青年戴着耳机、头歪靠在车窗上沉沉睡去，胸口随呼吸微微起伏、耳机线轻晃，窗外深夜飞掠；昏黄车灯、安静"
     dialogue: ""              # 背景歌曲从这一镜起：post 阶段用 --music <歌>.mp3
 
@@ -55,7 +55,7 @@ shots:
   - id: s4
     frame: frames/s4.jpeg
     camera: static
-    frame_prompt: "Detailed close-up of the same girl's reflection in the dark tram window glass at night — her tired, pensive face mirrored faintly on the glass, fine detail in her eyes, eyelashes and hair; the black night and faint streaking lights showing through behind the reflection; cool, intimate tone."
+    frame_prompt: "Detailed close-up of the same girl's face reflected in the dark LEFT-side tram window at night — her tired, pensive expression mirrored faintly on the glass, eyes lowered, fine detail in her eyes, eyelashes and hair; behind the reflection, the dim carriage interior and faint streaking night lights are visible through the glass; cool, intimate tone, shallow depth of field."
     prompt: "女主映在漆黑车窗玻璃上的倒影若隐若现，疲惫出神的脸、睫毛与发丝纤毫毕现；玻璃外深夜的点点灯火透过倒影缓缓流动，她极轻地眨了一下眼；冷色调、安静细腻"
     dialogue: "玻璃里的我，原来这么累。"
 
@@ -63,7 +63,7 @@ shots:
   - id: s5
     frame: frames/s5.jpeg
     camera: push_in
-    frame_prompt: "Medium close-up of the same girl looking down at a folded letter held in both hands (plain paper, no readable text), a quiet and resolved expression; pre-dawn around 5am, the sky outside the window just beginning to lighten to deep blue, dim tram interior."
+    frame_prompt: "Medium close-up of the same girl in her LEFT-side window seat, looking down at a folded letter held in both hands (plain paper, no readable text); her expression quiet, tired but resolved, a faint steadiness in her lowered eyes; the dim carriage softly blurred behind her with a hint of receding seats; pre-dawn around 5am, the sky outside the window just lightening to deep blue."
     prompt: "女主低头凝视手中的辞职信（素纸、没有可辨认的文字），指尖微微收紧，神情平静而坚定；凌晨五点，窗外天色刚泛起深蓝微光，车厢昏暗"
     dialogue: "握了一整夜的信……天，快亮了。"
 
@@ -73,6 +73,6 @@ shots:
     seconds: 6
     use_ref: false
     camera: pull_back_tilt
-    frame_prompt: "First-person POV looking out the tram window at dawn, no person in frame — the sun slowly rising over the horizon, railway tracks stretching toward it, warm golden morning light spilling across the fields and into the empty carriage; hopeful, serene."
+    frame_prompt: "First-person POV from the girl's LEFT-side window seat looking out at dawn, no person in frame — the lower edge of the dark window frame and a hint of the carriage interior in the foreground; outside, the sun slowly rising over a distant horizon, railway tracks stretching toward it in deep perspective, warm golden morning light flooding across the fields and into the carriage; hopeful, serene, strong sense of depth."
     prompt: "主人公视角望向窗外（画面中没有人物），地平线上太阳正缓缓升起，铁轨向远方延伸，暖金色的晨光铺满原野、漫进车厢，伴随车轮与铁轨规律的咔哒声响；通透、充满希望"
     dialogue: "新的一天，开始了。"

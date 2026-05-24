@@ -1,7 +1,7 @@
 # 画风库条目 —— 可复用的"美术风格"。剧本里用 `style: kyoani` 选它。
 # positive 拼到出图提示词后（英文）；negative 给 SDXL 出图用；video_suffix 拼到 Wan 运镜提示词后（中文）。
 name: 京阿尼
-positive: "Kyoto Animation (KyoAni) anime style, soft delicate cel-shading with gentle gradients, large expressive eyes with glossy highlights, naturalistic soft features, finely rendered hair, warm soft lighting, film-like"
+positive: "Kyoto Animation (KyoAni) anime style, soft delicate cel-shading with gentle gradients, large expressive eyes with glossy highlights, naturalistic soft features, finely rendered hair, warm soft lighting, film-like, highly detailed, crisp clean linework, cinematic depth of field, high quality"
 negative: "worst quality, low quality, lowres, bad anatomy, bad hands, missing fingers, extra digits, fewer digits, watermark, signature, text, jpeg artifacts, blurry"
 video_suffix: "日系动漫电影感"
 ref: null      # 可选：风格参考图
