@@ -2,82 +2,78 @@
 
 [English](./README.md) · **简体中文**
 
-一个极简、与剧本无关的**短剧图生视频（image-to-video）流水线**。
+一个极简的**短剧（图生视频）流水线**——在笔记本上写剧本、备起始帧，在 GPU 机器上把
+每个镜头渲染成视频，再加配音、字幕、配乐。全程命令行驱动。
 
-你在本地（比如 Mac 上）撰写剧本、准备每个镜头的起始帧图片，提交并推送到 git；一台
-GPU 机器（Google Colab，单张 **L4 24GB**）拉取仓库，把每个镜头渲染成 mp4。默认的
-视频模型是通过 `diffusers` 库调用的 **LTX-Video**。
+- **Mac 创作，GPU 机器（如 Colab）渲染。** 提交并推送剧本和帧；GPU 机器拉取并渲染。
+- **渲染：ComfyUI + Wan 2.2 图生视频**——高质量路径。也保留了本地 `diffusers` 引擎，
+  但 diffusers 的 Wan I2V 不稳（会融化），请用 ComfyUI。见 [`docs/COMFYUI.md`](./docs/COMFYUI.md)。
+- **GPU 只做视频。** 起始帧、配音、字幕、配乐、最终合成都在 Mac（CPU）上做，把 GPU
+  时间降到最低。见 [`docs/STAGES.md`](./docs/STAGES.md)。
+- **一套渲染器，多个项目**——新剧本只是 `projects/` 下的一个新文件夹。
 
-**设计目标：一套渲染器，多个项目。** 新剧本只是 `projects/` 下的一个新文件夹。
+## 流水线（每步可单独跑，便于逐步检查质量）
+
+```
+剧本/分镜 → 起始帧 → 视频(I2V) → 配音 → 字幕 → 配乐 → 成片
+   Mac      Mac/即梦   Colab GPU    Mac     Mac    Mac    Mac
+```
+
+## 快速开始
+
+**全新 Colab GPU 机器**（一个 cell——装 ComfyUI + Wan 模型并起服务）：
+```bash
+!git clone https://github.com/chengh233/shotforge /content/shotforge 2>/dev/null; \
+ cd /content/shotforge && git pull -q && bash scripts/colab_bootstrap.sh
+```
+
+**渲染 + 收尾**——分阶段，`bash run.sh <阶段> <项目>`：
+```bash
+bash run.sh video  projects/example --shot s1   # 先单镜验证   (Colab GPU)
+bash run.sh video  projects/example             # 全部镜头     (Colab GPU)
+bash run.sh dub    projects/example             # 配音         (Mac, edge-tts)
+bash run.sh subs   projects/example             # 字幕         (Mac)
+bash run.sh post   projects/example             # 拼接 + 配音 + 字幕 -> 成片 (Mac)
+bash run.sh post   projects/example --music bgm.mp3   # 再加背景音乐
+```
+
+每步在哪做、怎么看产物的详细命令：[`docs/STAGES.md`](./docs/STAGES.md)。
+一段视频是怎么生成的 + 调试：[`docs/PIPELINE.md`](./docs/PIPELINE.md)。
 
 ## 目录结构
 
 ```
-shotforge/        # 渲染器（与具体模型无关的图生视频）
+shotforge/
   manifest.py     # Shot/Project 数据类 + project.yaml 加载器
-  i2v.py          # diffusers 流水线封装（默认 LTX-Video）
-  generate.py     # 命令行：把一个项目的所有镜头渲染成 mp4
+  backends.py     # 模型注册表（Wan / LTX）：每个模型的帧数与尺寸规则
+  comfy.py        # comfy 引擎：通过 HTTP 驱动 ComfyUI 服务   ← 推荐
+  i2v.py          # diffusers 引擎（本地管线；LTX 可用，Wan I2V 会融化）
+  generate.py     # 命令行：渲染镜头  (--engine comfy | diffusers)
 tools/
-  stitch.py       # 用 ffmpeg 把各镜头的 mp4 拼接成一整部片子
-  last_frame.py   # 导出某个片段的最后一帧（用于衔接更长的镜头）
+  stitch.py       # 把各镜头拼成一部无声片
+  last_frame.py   # 导出片段最后一帧（衔接更长镜头）
+  dub.py          # 配音（TTS）：用每镜的 dialogue 生成        (CPU)
+  subtitle.py     # 按片段时长对齐生成 SRT                     (CPU)
+  post.py         # 最终合成：拼接 + 配音 + 配乐 + 烧字幕       (CPU)
+run.sh            # 分阶段入口
+scripts/          # comfyui_setup.sh、comfyui_serve.sh、colab_bootstrap.sh
+comfyui/          # wan_i2v_api.json —— comfy.py 驱动的 ComfyUI 工作流
+docs/             # PIPELINE.md(原理/调试)、COMFYUI.md(渲染搭建)、STAGES.md(分阶段)
 projects/
-  example/        # 一个项目 = 一个剧本
-    project.yaml  #   镜头列表 + 共享默认值
-    frames/       #   起始帧 PNG：s1.png、s2.png …
-    out/          #   渲染输出的 mp4（已被 git 忽略）
+  example/        # 一个项目 = 一个剧本：project.yaml + frames/ + out/
 ```
-
-## 工作流程
-
-**本地（Mac）：**
-
-1. 为新剧本复制一份项目文件夹：
-   `cp -r projects/example projects/ep01`
-2. 编辑 `projects/ep01/project.yaml`——镜头 id、提示词、时长。
-3. 把起始帧放进 `projects/ep01/frames/`，命名为 `s1.png`、`s2.png` ……
-   （可以用 **Dreamina（即梦）** 按 9:16 导出这些图片。）
-4. 提交并推送。
-
-**GPU 机器（Colab L4）：**
-
-```bash
-git pull
-bash setup.sh                                       # 安装依赖（不含 torch）
-python -m shotforge.generate --project projects/ep01
-python -m tools.stitch       --project projects/ep01   # 可选：拼成一整部
-```
-
-调试时可以用 `--shot s2` 只渲染单个镜头。
 
 ## “一个项目 = 一个剧本”
 
-一集的所有内容都放在它自己的 `projects/<name>/` 文件夹里——清单（manifest）、起始
-帧，以及渲染后的输出片段。渲染器代码不会因项目而改变。要做新剧，复制文件夹再改内容
-即可。
+一集的所有内容都在 `projects/<name>/`：`project.yaml`（镜头列表——每个镜头有起始帧、
+运动提示词、可选的 `dialogue` 台词）、`frames/` 起始帧、`out/` 渲染产物。渲染器代码不
+随项目改变；做新剧，复制文件夹再改即可。
 
-## 如何超过 5 秒
+## 模型与引擎
 
-LTX 的片段天生较短。三种获得更长内容的方式：
-
-1. **逐镜头设置 `seconds`**——在 `project.yaml` 里调高某个镜头的 `seconds:`
-   （例如 `seconds: 8`）。帧数会被自动对齐到 LTX 要求的 `8*N + 1`。
-2. **多个短镜头 + 拼接**——写多个镜头，再用 `tools.stitch` 拼成一整部连续的片子。
-3. **`last_frame` 衔接**——渲染一个镜头，导出它的最后一帧，把这张 PNG 作为下一个
-   子镜头的起始帧，从而得到无缝衔接的更长镜头：
-   ```bash
-   python -m tools.last_frame --video projects/ep01/out/s1.mp4 \
-                              --out   projects/ep01/frames/s1b.png
-   ```
-
-## 更换模型（例如 Wan 2.2）
-
-流水线类和权重都是可配置的：
-
-- 指向其他权重：
-  `export I2V_MODEL_ID="Wan-AI/Wan2.2-I2V-A14B-Diffusers"`
-- 在 `shotforge/i2v.py` 里，把 `LTXImageToVideoPipeline` 换成
-  `WanImageToVideoPipeline`（同样来自 `diffusers`）。调用签名（`image`、`prompt`、
-  `width`、`height`、`num_frames` 等）保持不变。
-
-注意：`8*N + 1` 这条帧数规则是 **LTX 特有的**；其他模型可能有不同的约束——参见
-`shotforge/manifest.py` 里的 `frames_for()`。
+- **`--engine comfy`**（推荐）——驱动跑着 **Wan 2.2 I2V** 的 ComfyUI，是能出高质量的
+  图生视频路径；umT5 文本编码器支持中文提示词。搭建见 [`docs/COMFYUI.md`](./docs/COMFYUI.md)。
+- **`--engine diffusers`**（默认值）——本地 diffusers 管线；LTX-Video 可用，但 Wan I2V
+  在 diffusers 里会飘/融化，这正是 comfy 引擎存在的原因。模型注册表：`shotforge/backends.py`。
+- 想让视频连贯、不像 AI（动漫风 + 细微动作 + 干净起始帧），见 [`docs/PIPELINE.md`](./docs/PIPELINE.md) 的经验。
+```

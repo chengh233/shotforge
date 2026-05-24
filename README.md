@@ -2,85 +2,86 @@
 
 **English** · [简体中文](./README.zh.md)
 
-A minimal, script-agnostic **image-to-video pipeline for short dramas (短剧)**.
+A minimal pipeline for making **short dramas (短剧) from images** — author the
+script and starting frames on your laptop, render each shot to video on a GPU
+box, then add voiceover, subtitles and music. All driven from the command line.
 
-You author scripts and prepare starting-frame images locally (e.g. on a Mac),
-commit, and push. A GPU box (Google Colab, single **L4 24GB**) pulls the repo
-and renders every shot to mp4. The default video model is **LTX-Video** via the
-`diffusers` library.
+- **Author on your Mac, render on a GPU box (e.g. Colab).** Commit + push the
+  script and frames; the GPU box pulls and renders.
+- **Rendering: ComfyUI + Wan 2.2 image-to-video** — the quality path. A local
+  `diffusers` engine also exists, but diffusers' Wan I2V is unreliable (melts);
+  use ComfyUI. See [`docs/COMFYUI.md`](./docs/COMFYUI.md).
+- **GPU does only video.** Frames, voiceover, subtitles, music and final
+  assembly run on the Mac (CPU) to keep GPU time minimal. See
+  [`docs/STAGES.md`](./docs/STAGES.md).
+- **One renderer, many projects** — a new drama is a new folder under `projects/`.
 
-**Design goal: one renderer, many projects.** A new script is just a new folder
-under `projects/`.
+## Pipeline (each stage runs on its own; check quality between steps)
+
+```
+script/storyboard → starting frames → video (I2V) → voiceover → subtitles → music → final
+     Mac               Mac / 即梦       Colab GPU       Mac         Mac        Mac     Mac
+```
+
+## Quickstart
+
+**Fresh Colab GPU box** (one cell — installs ComfyUI + Wan models, starts the server):
+```bash
+!git clone https://github.com/chengh233/shotforge /content/shotforge 2>/dev/null; \
+ cd /content/shotforge && git pull -q && bash scripts/colab_bootstrap.sh
+```
+
+**Render + finish** — staged, `bash run.sh <stage> <project>`:
+```bash
+bash run.sh video  projects/example --shot s1   # one shot first   (Colab GPU)
+bash run.sh video  projects/example             # all shots        (Colab GPU)
+bash run.sh dub    projects/example             # voiceover        (Mac, edge-tts)
+bash run.sh subs   projects/example             # subtitles        (Mac)
+bash run.sh post   projects/example             # concat + VO + subs -> final (Mac)
+bash run.sh post   projects/example --music bgm.mp3   # + background music
+```
+
+Step-by-step with where each stage runs and how to view each artifact:
+[`docs/STAGES.md`](./docs/STAGES.md). How a clip is generated + debugging:
+[`docs/PIPELINE.md`](./docs/PIPELINE.md).
 
 ## Layout
 
 ```
-shotforge/        # the renderer (model-agnostic image-to-video)
+shotforge/
   manifest.py     # Shot/Project dataclasses + project.yaml loader
-  i2v.py          # diffusers pipeline wrapper (LTX-Video by default)
-  generate.py     # CLI: render a project's shots to mp4
+  backends.py     # model registry (Wan / LTX): frame & dimension rules per model
+  comfy.py        # comfy engine: drive a ComfyUI server over HTTP   ← recommended
+  i2v.py          # diffusers engine (local pipeline; LTX ok, Wan I2V melts)
+  generate.py     # CLI: render shots  (--engine comfy | diffusers)
 tools/
-  stitch.py       # concat per-shot mp4s into one film (ffmpeg)
-  last_frame.py   # export a clip's last frame (for chaining longer takes)
+  stitch.py       # concat clips into one silent film
+  last_frame.py   # export a clip's last frame (chain longer takes)
+  dub.py          # voiceover (TTS) from each shot's dialogue        (CPU)
+  subtitle.py     # SRT timed to clip lengths                        (CPU)
+  post.py         # final mux: clips + voiceover + music + subtitles (CPU)
+run.sh            # staged runner
+scripts/          # comfyui_setup.sh, comfyui_serve.sh, colab_bootstrap.sh
+comfyui/          # wan_i2v_api.json — the ComfyUI workflow comfy.py drives
+docs/             # PIPELINE.md (how/debug), COMFYUI.md (render setup), STAGES.md (stages)
 projects/
-  example/        # a project = ONE script
-    project.yaml  #   shot list + shared defaults
-    frames/       #   starting-frame PNGs: s1.png, s2.png, ...
-    out/          #   rendered mp4s (gitignored)
+  example/        # a project = ONE script: project.yaml + frames/ + out/
 ```
 
-## Flow
+## A project = one script
 
-**Local (Mac):**
+Everything about an episode lives in `projects/<name>/`: the `project.yaml`
+(shot list — each shot has a starting frame, a motion prompt, and optional
+`dialogue`), the `frames/`, and the rendered `out/`. The renderer never changes
+per project; to make a new drama, copy the folder and edit it.
 
-1. Copy a project folder for your new script:
-   `cp -r projects/example projects/ep01`
-2. Edit `projects/ep01/project.yaml` — shot ids, prompts, lengths.
-3. Drop your starting frames into `projects/ep01/frames/` as `s1.png`,
-   `s2.png`, … (you can export these from **Dreamina** at 9:16).
-4. Commit and push.
+## Models & engines
 
-**GPU box (Colab L4):**
-
-```bash
-git pull
-bash setup.sh                                       # installs deps (NOT torch)
-python -m shotforge.generate --project projects/ep01
-python -m tools.stitch       --project projects/ep01   # optional: one film
-```
-
-While iterating, render a single shot with `--shot s2`.
-
-## "Project = one script"
-
-Everything about an episode lives in its `projects/<name>/` folder — the
-manifest, the frames, and (after rendering) the output clips. The renderer code
-never changes per project. To make a new drama, copy the folder and edit it.
-
-## Going past 5 seconds
-
-LTX clips are short by nature. Three ways to get longer content:
-
-1. **Per-shot `seconds`** — bump a shot's `seconds:` in `project.yaml`
-   (e.g. `seconds: 8`). The frame count is snapped to LTX's required `8*N + 1`.
-2. **Many short shots + stitch** — write several shots, then concatenate them
-   into one continuous film with `tools.stitch`.
-3. **`last_frame` chaining** — render a shot, extract its final frame, and use
-   that PNG as the next sub-shot's starting frame for a seamless longer take:
-   ```bash
-   python -m tools.last_frame --video projects/ep01/out/s1.mp4 \
-                              --out   projects/ep01/frames/s1b.png
-   ```
-
-## Swapping the model (e.g. Wan 2.2)
-
-The pipeline class and weights are configurable:
-
-- Point the loader at other weights:
-  `export I2V_MODEL_ID="Wan-AI/Wan2.2-I2V-A14B-Diffusers"`
-- In `shotforge/i2v.py`, swap `LTXImageToVideoPipeline` for
-  `WanImageToVideoPipeline` (also from `diffusers`). The call signature
-  (`image`, `prompt`, `width`, `height`, `num_frames`, …) is the same.
-
-Note: the `8*N + 1` frame rule is **LTX-specific**; other models may have
-different constraints — see `frames_for()` in `shotforge/manifest.py`.
+- **`--engine comfy`** (recommended) — drives ComfyUI running **Wan 2.2 I2V**,
+  the working high-quality image-to-video path; umT5 handles Chinese prompts.
+  Setup: [`docs/COMFYUI.md`](./docs/COMFYUI.md).
+- **`--engine diffusers`** (default flag value) — local diffusers pipeline; fine
+  for LTX-Video, but Wan I2V drifts/melts in diffusers — which is why the
+  ComfyUI engine exists. Model registry: `shotforge/backends.py`.
+- For coherent, non-AI-looking video (anime style + subtle motion + clean
+  frames), see the guidance in [`docs/PIPELINE.md`](./docs/PIPELINE.md).
