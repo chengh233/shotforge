@@ -22,8 +22,9 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 
-USAGE = ("usage: python run.py <setup|genref|train|frames|frames-lora|manga|video|stitch|dub|subs|post> "
-         "[project|character] [extra args]")
+USAGE = ("usage: python run.py <setup|genref|frames|manga|video|dub|subs|lipsync|post|stitch> "
+         "[project|character] [extra args]\n"
+         "  frames/video/lipsync go through shotforge.pipeline (compose + pluggable engines)")
 
 
 def run(*cmd: str) -> None:
@@ -46,19 +47,13 @@ def main() -> None:
 
     if stage == "genref":  # `project` here is a character id (characters/<id>)
         run(PY, "-m", "shotforge.genref", "--character", project, *extra)
-    elif stage == "train":  # `project` here is a character id — train its LoRA (GPU)
-        run(PY, "scripts/train_lora.py", "--character", project, *extra)
-    elif stage == "frames":
-        run(PY, "-m", "shotforge.frames", "--project", project, *extra)
-    elif stage == "frames-lora":  # T2I + character LoRA (the consistent + free-framing path)
-        run(PY, "-m", "shotforge.frames_lora", "--project", project, *extra)
-    elif stage == "video":
-        run(PY, "-m", "shotforge.generate", "--project", project, "--engine", "comfy", *extra)
+    elif stage in ("frames", "video", "lipsync"):   # compose + pluggable engines
+        run(PY, "-m", "shotforge.pipeline", stage, "--project", project, *extra)
     elif stage == "manga":  # assemble frames into a 条漫/storyboard page (read it as stills)
         run(PY, "-m", "tools.manga", "--project", project, *extra)
     elif stage == "stitch":
         run(PY, "-m", "tools.stitch", "--project", project)
-    elif stage == "dub":
+    elif stage in ("dub", "voice"):
         run(PY, "-m", "tools.dub", "--project", project, *extra)
     elif stage == "subs":
         run(PY, "-m", "tools.subtitle", "--project", project)

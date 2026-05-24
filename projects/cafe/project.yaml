@@ -1,0 +1,40 @@
+# 验收 demo：咖啡馆两人对话（正反打 / shot-reverse-shot）。
+# 证明：多角色 cast + 每镜 subjects/speaker + 按说话人配音 + 共享场景一致 全部成立。
+#
+# 解耦：cast(演员) / scene(布景) / style(画风) / camera(运镜) 都只引用素材库 id。
+# s1 从 A 视角看 B（B 说话）；s2 反打，从 B 视角看 A（A 说话）。
+
+title: 咖啡馆对话
+fps: 16
+engines: {image: nanobanana, video: wan}   # 可换：image 改 flux-kontext 等
+
+cast: {A: yuki, B: aki}   # 两个演员（各自参考图/声音）：A=小雪(女), B=小秋(男)
+scene: cafe               # 共享布景
+style: kyoani             # 共享画风
+
+defaults:
+  steps: 40
+  seconds: 4
+  seed: 0
+  negative: "最差质量，低质量，多余的手指，畸形的手，畸形的脸，字幕，文字，水印，杂乱背景，三条腿"
+
+shots:
+  # 镜头1 · 从 A 视角看 B，B 在说话
+  - id: s1
+    frame: frames/s1.jpeg
+    camera: ots
+    subjects: [B]           # 画面主体=小秋；A 的肩在前景
+    speaker: B              # → 用 B(小秋) 的声音
+    content: "咖啡馆靠窗的木桌前，越过 A 的肩头（A 的后脑与肩在前景、虚化）看向对面坐着的 B；B 双手捧着咖啡杯、身体微微前倾正在说话，神情温和认真；午后暖光，窗外街景虚化，浅景深。"
+    action:  "B 嘴唇在动、偶尔点头，咖啡杯升起袅袅热气，光影轻微浮动"
+    dialogue: "这家店，比我想象的还要安静。"
+
+  # 镜头2 · 反打：从 B 视角看 A，A 在说话
+  - id: s2
+    frame: frames/s2.jpeg
+    camera: ots
+    subjects: [A]           # 画面主体=小雪；B 的肩在前景
+    speaker: A              # → 用 A(小雪) 的声音
+    content: "反打：越过 B 的肩头（B 的后脑与肩在前景、虚化）看向对面坐着的 A；A 靠在椅背上、指尖轻搭杯沿，正在回话，神情柔和、带一点浅笑；同一张木桌、同样的午后暖光，浅景深。"
+    action:  "A 嘴唇在动、轻轻笑了一下，发丝微动，热气浮动"
+    dialogue: "嗯……我也很久没有这么放松过了。"

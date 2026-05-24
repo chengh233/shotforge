@@ -1,113 +1,130 @@
 """Data model + project loader for shotforge.
 
-A "project" is one short-drama script: a folder under projects/ holding a
-project.yaml manifest and a frames/ directory of starting-frame PNGs. The
-manifest's top-level ``model:`` field selects a backend (see backends.py),
-whose constraints drive the frame-count and dimension snapping below.
+A "project" is one short-drama script: ``projects/<name>/project.yaml`` + a
+``frames/`` dir + ``out/``. The project only *references* asset-library elements
+(cast / scene / style …) and selects engines; it embeds no content. Everything
+is resolved here into a ``Project`` the composer + engines consume.
 """
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import yaml
 
 from .backends import get_backend
+from .element import Element, load_element
 
 
 @dataclass
 class Shot:
     id: str
     frame: str
-    prompt: str
+    prompt: str = ""          # composed Wan motion prompt (camera + action + style suffix)
     seconds: float = 5.0
     width: int = 480
     height: int = 832
     steps: int = 40
     seed: int = 0
     negative: str = ""
-    dialogue: str = ""       # spoken line / narration for this shot (TTS + subtitles)
-    frame_prompt: str = ""   # English prompt to GENERATE this shot's frame
-    use_ref: bool = True     # generate WITH the character reference (False = extras/scenery: no ref, no protagonist)
-    camera: str = ""         # camera-move id (see cameras.py); prepended to `prompt` for the Wan motion prompt
-    base: str = ""           # generate this frame using another shot's frame as the reference (chaining; keeps the character's seat/position)
+    dialogue: str = ""        # spoken line / narration for this shot (TTS + subtitles)
+    frame_prompt: str = ""    # image CONTENT for this shot's frame (a.k.a. `content`)
+    camera: str = ""          # camera-move id (cameras.py)
+    base: str = ""            # generate this frame from another shot's frame (chaining; keeps seat/pose)
+    subjects: list[str] = field(default_factory=list)  # cast roles IN this frame ([] = extras/scenery)
+    speaker: str = ""         # cast role whose dialogue/voice this shot carries
 
 
 @dataclass
 class Project:
     root: str
     name: str
-    model: str          # backend name from project.yaml `model:` (e.g. "ltx")
+    model: str
     fps: int
     shots: list[Shot]
-    character: str = ""       # shared character description (prepended to frame prompts)
-    character_ref: str = ""   # path to ONE reference image of the character
-    cast: str = ""            # character-library id cast in this project (project.yaml `cast:`)
-    voice: str = ""           # TTS voice for the cast character (used by tools.dub)
-    scene: str = ""           # scene-library id (project.yaml `scene:`) — the reusable set
-    scene_ref: str = ""       # path to ONE reference image of the setting
-    scene_desc: str = ""      # English description of the setting (for prompts)
-    style: str = ""           # style-library id (project.yaml `style:`) — the reusable look
-    style_positive: str = ""  # look fragment appended to image-gen prompts
-    style_negative: str = ""  # negative tags for SDXL image gen
-    style_video_suffix: str = ""  # Chinese suffix appended to Wan motion prompts
+    engines: dict[str, str] = field(default_factory=dict)   # stage -> engine name
+    # cast (the actors)
+    cast_map: dict[str, str] = field(default_factory=dict)          # role -> character id
+    cast_elements: dict[str, Element] = field(default_factory=dict)  # role -> Element
+    # back-compat single-character view (primary cast member)
+    character: str = ""
+    character_ref: str = ""
+    cast: str = ""
+    voice: str = ""
+    # the set
+    scene: str = ""
+    scene_ref: str = ""
+    scene_desc: str = ""
+    scene_el: Element | None = None
+    # the look
+    style: str = ""
+    style_positive: str = ""
+    style_negative: str = ""
+    style_video_suffix: str = ""
+    style_el: Element | None = None
+
+    def voice_for(self, role: str) -> str:
+        """TTS voice for a cast role (falls back to the primary voice)."""
+        el = self.cast_elements.get(role)
+        return (el.voice if el else "") or self.voice
 
 
 def frames_for(seconds: float, fps: int, quantum: int = 8) -> int:
-    """Number of frames to render for a clip.
-
-    Most I2V models require ``num_frames == quantum * N + 1`` (LTX: 8, Wan: 4).
-    We pick the value of that form closest to ``seconds * fps``, with a floor of
-    one full quantum. ``quantum`` comes from the project's model backend.
-    """
     target = max(quantum + 1, round(seconds * fps))
     k = max(1, round((target - 1) / quantum))
     return quantum * k + 1
 
 
 def snap_dim(x: int, multiple: int = 32) -> int:
-    """Snap a dimension to the nearest valid multiple (LTX: 32, Wan: 16).
-
-    Video dims must divide the model's ``dim_multiple`` or the pipeline errors
-    or produces garbage. ``multiple`` comes from the project's model backend.
-    """
     return max(multiple, round(x / multiple) * multiple)
 
 
-def load_project(path: str) -> Project:
-    """Load ``<path>/project.yaml`` and resolve each shot.
+def _cast_map(raw: Any) -> dict[str, str]:
+    if isinstance(raw, dict):
+        return {str(k): str(v) for k, v in raw.items()}
+    if raw:
+        return {"protagonist": str(raw)}
+    return {}
 
-    The ``model:`` field selects a backend; per-shot values fall back to the
-    optional ``defaults`` block, then to the backend's defaults. Frame paths are
-    joined with the project dir and width/height are snapped to the backend's
-    dimension multiple.
-    """
+
+def load_project(path: str) -> Project:
     manifest = os.path.join(path, "project.yaml")
     with open(manifest, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
 
     backend = get_backend(data.get("model"))
     defaults: dict[str, Any] = data.get("defaults") or {}
+    engines = {str(k): str(v) for k, v in (data.get("engines") or {}).items()}
 
-    # The look: a style-library id provides a prompt fragment (still) + a Chinese
-    # suffix (video). Resolved first so shots can fold the video suffix in.
+    # cast (actors) — a map role->id (or a single id -> {protagonist: id})
+    cast_map = _cast_map(data.get("cast"))
+    cast_elements = {role: load_element("character", cid) for role, cid in cast_map.items()}
+    primary_role = next(iter(cast_map), "")
+    primary = cast_elements.get(primary_role)
+
+    # the set + the look (resolved once)
+    scene = str(data.get("scene", "") or "")
+    scene_el = load_element("scene", scene) if scene else None
     style = str(data.get("style", "") or "")
-    style_positive = style_negative = style_video_suffix = ""
-    if style:
-        from .styles import load_style
-        st = load_style(style)
-        style_positive, style_negative, style_video_suffix = st.positive, st.negative, st.video_suffix
+    style_el = load_element("style", style) if style else None
+    style_video_suffix = style_el.motion if style_el else ""
 
-    cam: dict[str, str] | None = None  # camera vocab, loaded lazily if any shot uses it
+    cam: dict[str, str] | None = None  # camera vocab, lazily loaded
 
     shots: list[Shot] = []
     for raw in data.get("shots") or []:
         merged: dict[str, Any] = {**defaults, **raw}
-        # Motion prompt = <camera move> + <scene action> + <style video suffix>.
-        # Without a `camera:`, the `prompt` is used verbatim (back-compat).
+        # subjects: cast roles in frame. Back-compat: fall back to use_ref bool.
+        subjects = merged.get("subjects")
+        if subjects is None:
+            subjects = [primary_role] if (merged.get("use_ref", True) and primary_role) else []
+        subjects = [str(s) for s in subjects]
+        speaker = str(merged.get("speaker", "") or (subjects[0] if subjects else primary_role))
+
+        # motion prompt = <camera move> + <action> + <style video suffix>
         camera_id = str(merged.get("camera", "") or "")
-        action = str(merged.get("prompt", ""))
+        action = str(merged.get("prompt", merged.get("action", "")))
         if camera_id:
             if cam is None:
                 from .cameras import cameras as _load_cameras
@@ -116,55 +133,38 @@ def load_project(path: str) -> Project:
             prompt = "，".join(p for p in (move, action.strip(), style_video_suffix) if p)
         else:
             prompt = action
-        shots.append(
-            Shot(
-                id=str(merged["id"]),
-                frame=os.path.join(path, str(merged["frame"])),
-                prompt=prompt,
-                seconds=float(merged.get("seconds", Shot.seconds)),
-                width=snap_dim(int(merged.get("width", backend.default_width)), backend.dim_multiple),
-                height=snap_dim(int(merged.get("height", backend.default_height)), backend.dim_multiple),
-                steps=int(merged.get("steps", backend.default_steps)),
-                seed=int(merged.get("seed", Shot.seed)),
-                negative=str(merged.get("negative", Shot.negative)),
-                dialogue=str(merged.get("dialogue", Shot.dialogue)),
-                frame_prompt=str(merged.get("frame_prompt", Shot.frame_prompt)),
-                use_ref=bool(merged.get("use_ref", Shot.use_ref)),
-                camera=camera_id,
-                base=str(merged.get("base", "") or ""),
-            )
-        )
 
-    name = str(data.get("project") or os.path.basename(os.path.abspath(path)))
+        shots.append(Shot(
+            id=str(merged["id"]),
+            frame=os.path.join(path, str(merged["frame"])),
+            prompt=prompt,
+            seconds=float(merged.get("seconds", Shot.seconds)),
+            width=snap_dim(int(merged.get("width", backend.default_width)), backend.dim_multiple),
+            height=snap_dim(int(merged.get("height", backend.default_height)), backend.dim_multiple),
+            steps=int(merged.get("steps", backend.default_steps)),
+            seed=int(merged.get("seed", Shot.seed)),
+            negative=str(merged.get("negative", Shot.negative)),
+            dialogue=str(merged.get("dialogue", Shot.dialogue)),
+            frame_prompt=str(merged.get("content", merged.get("frame_prompt", ""))),
+            camera=camera_id,
+            base=str(merged.get("base", "") or ""),
+            subjects=subjects,
+            speaker=speaker,
+        ))
+
+    name = str(data.get("project") or data.get("title") or os.path.basename(os.path.abspath(path)))
     fps = int(data.get("fps", backend.default_fps))
 
-    # Casting: a character-library id provides appearance / reference / voice;
-    # explicit project-level fields (if set) take precedence over the cast values.
-    character = str(data.get("character", ""))
+    character = str(data.get("character", "")) or (primary.prompt if primary else "")
     ref = data.get("character_ref")
-    character_ref = os.path.join(path, str(ref)) if ref else ""
-    cast = str(data.get("cast", "") or "")
-    voice = ""
-    if cast:
-        from .characters import load_character
-        ch = load_character(cast)
-        character = character or ch.appearance
-        character_ref = character_ref or ch.ref
-        voice = ch.voice
+    character_ref = (os.path.join(path, str(ref)) if ref else "") or (primary.ref if primary else "")
+    voice = primary.voice if primary else ""
 
-    # The set: a scene-library id provides one reference image + description, reused
-    # across every shot (and across projects) for a consistent location/style.
-    scene = str(data.get("scene", "") or "")
-    scene_ref = ""
-    scene_desc = ""
-    if scene:
-        from .scenes import load_scene
-        sc = load_scene(scene)
-        scene_ref = sc.ref
-        scene_desc = sc.description
-
-    return Project(root=path, name=name, model=backend.name, fps=fps, shots=shots,
-                   character=character, character_ref=character_ref, cast=cast, voice=voice,
-                   scene=scene, scene_ref=scene_ref, scene_desc=scene_desc,
-                   style=style, style_positive=style_positive, style_negative=style_negative,
-                   style_video_suffix=style_video_suffix)
+    return Project(
+        root=path, name=name, model=backend.name, fps=fps, shots=shots, engines=engines,
+        cast_map=cast_map, cast_elements=cast_elements,
+        character=character, character_ref=character_ref, cast=primary_role and cast_map[primary_role], voice=voice,
+        scene=scene, scene_ref=(scene_el.ref if scene_el else ""), scene_desc=(scene_el.prompt if scene_el else ""), scene_el=scene_el,
+        style=style, style_positive=(style_el.prompt if style_el else ""),
+        style_negative=(style_el.negative if style_el else ""), style_video_suffix=style_video_suffix, style_el=style_el,
+    )

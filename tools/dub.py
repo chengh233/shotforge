@@ -34,8 +34,6 @@ def main() -> None:
     args = ap.parse_args()
 
     project = load_project(args.project)
-    voice = args.voice or project.voice or "zh-CN-XiaoxiaoNeural"
-    print(f"[tts] voice = {voice}" + (f" (from cast '{project.cast}')" if project.voice and not args.voice else ""))
     adir = os.path.join(args.project, "out", "audio")
     os.makedirs(adir, exist_ok=True)
 
@@ -44,8 +42,10 @@ def main() -> None:
         if not shot.dialogue.strip():
             print(f"[skip] {shot.id}: no dialogue")
             continue
+        # per-shot speaker voice (multi-character): the speaking role's voice
+        voice = args.voice or project.voice_for(shot.speaker) or "zh-CN-XiaoxiaoNeural"
         path = os.path.join(adir, f"{shot.id}.mp3")
-        print(f"[tts] {shot.id}: {shot.dialogue!r} -> {path}")
+        print(f"[tts] {shot.id} ({shot.speaker or '—'}/{voice}): {shot.dialogue!r} -> {path}")
         asyncio.run(_say(shot.dialogue, voice, path))
         n += 1
     print(f"[ok] {n} clips -> {adir}")
