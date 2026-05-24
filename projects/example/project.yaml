@@ -12,7 +12,7 @@
 #   3) 画面干净、主体突出——杂乱前景在运动中最容易崩（见 docs/PIPELINE.md）。
 
 project: 夏风             # 显示名；省略则用文件夹名
-model: wan-480p          # 草稿档(快)；出高质量定稿换 wan(720P) 并把 steps 提到 50
+model: wan                # 分辨率档：wan=720P(高质量) / wan-480p=480P(快草稿)。comfy 引擎据此定渲染尺寸
 fps: 16                  # Wan 2.1 按 16fps 训练
 
 # 💡 提示词语言：wan 用 umT5（多语言），运动提示词可直接写中文。
