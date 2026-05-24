@@ -1,0 +1,26 @@
+# LoRA training-set prompts for 小雪 (yuki). ~18 varied angles/expressions on
+# SIMPLE backgrounds so the LoRA learns the CHARACTER, not the scenes.
+# Run (on the Mac), feeding the reference image so every shot is the same person:
+#   python -m tools.nanobanana --prompts characters/yuki/dataset_prompts.txt \
+#       --ref characters/yuki/ref.png --out characters/yuki/dataset
+# Each line is one prompt; the script appends a "same character / 9:16" instruction.
+# Core look is repeated on every line so even the text reinforces consistency.
+
+Kyoto Animation (KyoAni) anime style, an 18-year-old girl with a short black bob, beige trench coat and a light scarf, large expressive eyes, soft cel-shading; front-facing upper-body portrait, neutral calm expression, plain light-gray studio background, soft even lighting
+KyoAni anime style, the same girl (short black bob, beige trench coat, light scarf); 3/4 view from her left, gentle small smile, plain background
+KyoAni anime style, the same girl; 3/4 view from her right, calm thoughtful look, plain background
+KyoAni anime style, the same girl; left side profile, looking ahead, plain background
+KyoAni anime style, the same girl; right side profile, eyes lowered, plain background
+KyoAni anime style, the same girl; looking slightly up, hopeful soft expression, plain background
+KyoAni anime style, the same girl; looking down, quiet melancholic expression, plain background
+KyoAni anime style, the same girl; tight close-up of the face, gentle warm smile, glossy detailed eyes, plain background
+KyoAni anime style, the same girl; close-up, faint sad expression, eyes a little teary, plain background
+KyoAni anime style, the same girl; surprised expression, eyes slightly wide, plain background
+KyoAni anime style, the same girl; soft laughing expression, eyes happily narrowed, plain background
+KyoAni anime style, the same girl; full-body standing pose, facing forward, hands at her sides, plain background
+KyoAni anime style, the same girl; full-body, standing in 3/4 view, scarf draped, plain background
+KyoAni anime style, the same girl; sitting, hands resting on her lap, calm expression, plain background
+KyoAni anime style, the same girl; upper body, slight high-angle view looking down at her, plain background
+KyoAni anime style, the same girl; upper body, slight low-angle view looking up at her, plain background
+KyoAni anime style, the same girl; head-and-shoulders, three-quarter back view glancing over her shoulder, plain background
+KyoAni anime style, the same girl; upper body, hand gently near her cheek, soft tender expression, plain background
