@@ -15,3 +15,4 @@ pyyaml
 sentencepiece
 ftfy            # Wan's pipeline uses it to clean/normalize prompts (incl. CJK)
 requests        # comfy engine: talk to a running ComfyUI server over HTTP
+edge-tts        # post: voiceover (TTS) — runs on CPU/Mac, no GPU needed

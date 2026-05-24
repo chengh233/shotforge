@@ -27,6 +27,7 @@ class Shot:
     steps: int = 40
     seed: int = 0
     negative: str = ""
+    dialogue: str = ""   # spoken line / narration for this shot (TTS + subtitles)
 
 
 @dataclass
@@ -88,6 +89,7 @@ def load_project(path: str) -> Project:
                 steps=int(merged.get("steps", backend.default_steps)),
                 seed=int(merged.get("seed", Shot.seed)),
                 negative=str(merged.get("negative", Shot.negative)),
+                dialogue=str(merged.get("dialogue", Shot.dialogue)),
             )
         )
 

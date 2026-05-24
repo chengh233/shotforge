@@ -16,8 +16,16 @@ new folder under `projects/`.
   pipeline class lazily; `$I2V_MODEL_ID` overrides the checkpoint; singleton
   pipe keyed by (class, checkpoint).
 - `shotforge/generate.py` — CLI render loop (`python -m shotforge.generate`).
-- `tools/stitch.py` — ffmpeg concat of per-shot mp4s.
+- `tools/stitch.py` — ffmpeg concat of per-shot mp4s (silent).
 - `tools/last_frame.py` — export a clip's last frame for chaining.
+- `tools/dub.py` / `tools/subtitle.py` / `tools/post.py` — post-production (CPU,
+  runs on the Mac): TTS voiceover (edge-tts) from each shot's `dialogue`, an SRT
+  timed to clip lengths, and the final mux (concat + voiceover + optional music
+  + burned subtitles). No GPU.
+- `run.sh` — staged runner (`bash run.sh <setup|serve|video|dub|subs|post> ...`).
+- `scripts/colab_bootstrap.sh` — one-command setup on a fresh Colab.
+- `docs/STAGES.md` — staged pipeline, what runs where (GPU only does video I2V;
+  everything else on the Mac to save GPU time), per-stage view-artifact commands.
 - `projects/<name>/` — one script: `project.yaml` + `frames/` + `out/`.
 - `docs/PIPELINE.md` — how a video is generated end-to-end + a debug guide.
 - `shotforge/comfy.py` — `engine: comfy`. Drives a running ComfyUI server over
