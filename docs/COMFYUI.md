@@ -11,11 +11,11 @@ diffusers 的 Wan 图生视频出图融化/崩坏（我们试了 fp32 VAE、CLIP
 ```bash
 # A) 一次性安装（装过可跳过）
 cd /content/shotforge && git pull
-bash scripts/comfyui_setup.sh        # ComfyUI + Wan 模型
+python scripts/colab_setup.py        # ComfyUI + Wan 模型
 pip install requests
 
 # B) 后台启动 ComfyUI 服务，并等它就绪
-bash scripts/comfyui_serve.sh        # 打印 "ComfyUI up on :8188" 才算好
+python scripts/colab_setup.py        # 打印 "ComfyUI up on :8188" 才算好
 
 # C) 确认 B 起来后，用 shotforge 调它渲染
 python -m shotforge.generate --project projects/example --engine comfy --shot s1
@@ -82,7 +82,7 @@ rm -rf ~/.cache/huggingface/hub/models--Wan-AI--Wan2.1-I2V-14B-*
 ### 1. 安装 ComfyUI + 下载 Wan 2.2 I2V 模型（~60GB）
 ```bash
 cd /content/shotforge && git pull        # 取到本脚本
-bash scripts/comfyui_setup.sh
+python scripts/colab_setup.py
 ```
 脚本会：clone ComfyUI、装依赖、把 4 个模型文件下到正确目录、下载官方工作流到 `/content/wan2_2_i2v_workflow.json`。
 

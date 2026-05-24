@@ -28,17 +28,17 @@ script/storyboard → starting frames → video (I2V) → voiceover → subtitle
 **Fresh Colab GPU box** (one cell — installs ComfyUI + Wan models, starts the server):
 ```bash
 !git clone https://github.com/chengh233/shotforge /content/shotforge 2>/dev/null; \
- cd /content/shotforge && git pull -q && bash scripts/colab_bootstrap.sh
+ cd /content/shotforge && git pull -q && python scripts/colab_setup.py
 ```
 
-**Render + finish** — staged, `bash run.sh <stage> <project>`:
+**Render + finish** — staged, `python run.py <stage> <project>`:
 ```bash
-bash run.sh video  projects/example --shot s1   # one shot first   (Colab GPU)
-bash run.sh video  projects/example             # all shots        (Colab GPU)
-bash run.sh dub    projects/example             # voiceover        (Mac, edge-tts)
-bash run.sh subs   projects/example             # subtitles        (Mac)
-bash run.sh post   projects/example             # concat + VO + subs -> final (Mac)
-bash run.sh post   projects/example --music bgm.mp3   # + background music
+python run.py video  projects/example --shot s1   # one shot first   (Colab GPU)
+python run.py video  projects/example             # all shots        (Colab GPU)
+python run.py dub    projects/example             # voiceover        (Mac, edge-tts)
+python run.py subs   projects/example             # subtitles        (Mac)
+python run.py post   projects/example             # concat + VO + subs -> final (Mac)
+python run.py post   projects/example --music bgm.mp3   # + background music
 ```
 
 Step-by-step with where each stage runs and how to view each artifact:
@@ -60,8 +60,8 @@ tools/
   dub.py          # voiceover (TTS) from each shot's dialogue        (CPU)
   subtitle.py     # SRT timed to clip lengths                        (CPU)
   post.py         # final mux: clips + voiceover + music + subtitles (CPU)
-run.sh            # staged runner
-scripts/          # comfyui_setup.sh, comfyui_serve.sh, colab_bootstrap.sh
+run.py            # staged runner (python run.py <stage> <project>)
+scripts/          # colab_setup.py — install ComfyUI + Wan models, serve, verify
 comfyui/          # wan_i2v_api.json — the ComfyUI workflow comfy.py drives
 docs/             # PIPELINE.md (how/debug), COMFYUI.md (render setup), STAGES.md (stages)
 projects/

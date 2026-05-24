@@ -24,17 +24,17 @@
 **全新 Colab GPU 机器**（一个 cell——装 ComfyUI + Wan 模型并起服务）：
 ```bash
 !git clone https://github.com/chengh233/shotforge /content/shotforge 2>/dev/null; \
- cd /content/shotforge && git pull -q && bash scripts/colab_bootstrap.sh
+ cd /content/shotforge && git pull -q && python scripts/colab_setup.py
 ```
 
-**渲染 + 收尾**——分阶段，`bash run.sh <阶段> <项目>`：
+**渲染 + 收尾**——分阶段，`python run.py <阶段> <项目>`：
 ```bash
-bash run.sh video  projects/example --shot s1   # 先单镜验证   (Colab GPU)
-bash run.sh video  projects/example             # 全部镜头     (Colab GPU)
-bash run.sh dub    projects/example             # 配音         (Mac, edge-tts)
-bash run.sh subs   projects/example             # 字幕         (Mac)
-bash run.sh post   projects/example             # 拼接 + 配音 + 字幕 -> 成片 (Mac)
-bash run.sh post   projects/example --music bgm.mp3   # 再加背景音乐
+python run.py video  projects/example --shot s1   # 先单镜验证   (Colab GPU)
+python run.py video  projects/example             # 全部镜头     (Colab GPU)
+python run.py dub    projects/example             # 配音         (Mac, edge-tts)
+python run.py subs   projects/example             # 字幕         (Mac)
+python run.py post   projects/example             # 拼接 + 配音 + 字幕 -> 成片 (Mac)
+python run.py post   projects/example --music bgm.mp3   # 再加背景音乐
 ```
 
 每步在哪做、怎么看产物的详细命令：[`docs/STAGES.md`](./docs/STAGES.md)。
@@ -55,8 +55,8 @@ tools/
   dub.py          # 配音（TTS）：用每镜的 dialogue 生成        (CPU)
   subtitle.py     # 按片段时长对齐生成 SRT                     (CPU)
   post.py         # 最终合成：拼接 + 配音 + 配乐 + 烧字幕       (CPU)
-run.sh            # 分阶段入口
-scripts/          # comfyui_setup.sh、comfyui_serve.sh、colab_bootstrap.sh
+run.py            # 分阶段入口
+scripts/          # colab_setup.py —— 装 ComfyUI + 下 Wan 模型 + 起服务 + 验证
 comfyui/          # wan_i2v_api.json —— comfy.py 驱动的 ComfyUI 工作流
 docs/             # PIPELINE.md(原理/调试)、COMFYUI.md(渲染搭建)、STAGES.md(分阶段)
 projects/

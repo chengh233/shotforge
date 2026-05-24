@@ -22,8 +22,8 @@ new folder under `projects/`.
   runs on the Mac): TTS voiceover (edge-tts) from each shot's `dialogue`, an SRT
   timed to clip lengths, and the final mux (concat + voiceover + optional music
   + burned subtitles). No GPU.
-- `run.sh` — staged runner (`bash run.sh <setup|serve|video|dub|subs|post> ...`).
-- `scripts/colab_bootstrap.sh` — one-command setup on a fresh Colab.
+- `run.py` — staged runner (`python run.py <setup|serve|video|dub|subs|post> ...`).
+- `scripts/colab_setup.py` — one-command setup on a fresh Colab.
 - `docs/STAGES.md` — staged pipeline, what runs where (GPU only does video I2V;
   everything else on the Mac to save GPU time), per-stage view-artifact commands.
 - `projects/<name>/` — one script: `project.yaml` + `frames/` + `out/`.
@@ -33,7 +33,7 @@ new folder under `projects/`.
   download mp4). The high-quality Wan path; diffusers' Wan I2V melts/garbles (a
   known diffusers limitation we hit repeatedly).
   Run: `python -m shotforge.generate --project <p> --engine comfy`.
-- `docs/COMFYUI.md` + `scripts/comfyui_setup.sh` — ComfyUI install on the GPU box
+- `docs/COMFYUI.md` + `scripts/colab_setup.py` — ComfyUI install on the GPU box
   (Colab) + Wan 2.2 I2V models + the rendering-backend guide (plan B).
 - `comfyui/wan_i2v_api.json` — the exported ComfyUI API workflow `comfy.py`
   drives; `NODE_*` ids in `comfy.py` index into it (re-check if you re-export).
@@ -69,10 +69,10 @@ new folder under `projects/`.
 
 ## Run
 ```bash
-bash setup.sh                                              # deps, NOT torch
-python -m shotforge.generate --project projects/example
-python -m shotforge.generate --project projects/example --shot s2   # one shot
-python -m tools.stitch       --project projects/example
+python scripts/colab_setup.py                              # Colab: ComfyUI + Wan models + serve
+python run.py video projects/example --shot s2             # render one shot (comfy engine)
+python run.py video projects/example                       # all shots
+python run.py dub|subs|post projects/example               # voiceover / subtitles / final mux
 python -m tools.last_frame   --video <clip>.mp4 --out <next>.png
 ```
 

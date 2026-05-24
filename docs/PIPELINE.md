@@ -65,11 +65,11 @@ flowchart TD
 命令（在 GPU box 上）：
 
 ```bash
-bash setup.sh                                              # 装依赖（不含 torch）
-python -m shotforge.generate --project projects/example    # 渲染全部镜头
-python -m shotforge.generate --project projects/example --shot s2   # 只渲染一个镜头
-python -m tools.stitch       --project projects/example    # 拼接成完整短剧
-python -m tools.last_frame   --video out/s1.mp4 --out frames/s1b.png # 接镜延长
+python scripts/colab_setup.py                              # Colab: 装 ComfyUI + Wan 模型 + 起服务
+python run.py video projects/example --shot s2             # 渲染单镜（comfy 引擎）
+python run.py video projects/example                       # 渲染全部镜头
+python run.py dub  projects/example                        # 配音（再 subs / post 收尾）
+python -m tools.last_frame --video out/s1.mp4 --out frames/s1b.png  # 接镜延长
 ```
 
 ---
