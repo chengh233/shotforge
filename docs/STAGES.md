@@ -75,7 +75,8 @@ python run.py subs projects/example                  # → out/<片名>.srt（�
 
 ### ⑤ 后期合成（Mac）
 ```bash
-python run.py post projects/example                          # 拼接 + 配音 + 烧字幕
+python run.py post projects/example                          # 拼接 + 配音 + 烧字幕（硬切）
+python run.py post projects/example --crossfade 0.5 --fade 0.6  # 镜头间溶解 + 首尾淡入淡出
 python run.py post projects/example --music bgm.mp3          # 再加背景音乐（自动压低音量混音）
 ```
 **看产物**：`open projects/example/out/夏风_final.mp4`（Mac 打开）
