@@ -31,6 +31,7 @@ class Shot:
     frame_prompt: str = ""   # English prompt to GENERATE this shot's frame
     use_ref: bool = True     # generate WITH the character reference (False = extras/scenery: no ref, no protagonist)
     camera: str = ""         # camera-move id (see cameras.py); prepended to `prompt` for the Wan motion prompt
+    base: str = ""           # generate this frame using another shot's frame as the reference (chaining; keeps the character's seat/position)
 
 
 @dataclass
@@ -130,6 +131,7 @@ def load_project(path: str) -> Project:
                 frame_prompt=str(merged.get("frame_prompt", Shot.frame_prompt)),
                 use_ref=bool(merged.get("use_ref", Shot.use_ref)),
                 camera=camera_id,
+                base=str(merged.get("base", "") or ""),
             )
         )
 

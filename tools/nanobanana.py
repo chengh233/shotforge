@@ -123,6 +123,7 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
         raise SystemExit(f"[nano] project uses scene={project.scene!r} but its reference image is missing "
                          f"({project.scene_ref!r}). Generate one shot of the empty set (vertical 9:16) and save it there.")
     scene_img = _load_refs([project.scene_ref]) if (project.scene_ref and os.path.isfile(project.scene_ref)) else []
+    frame_by_id = {s.id: s.frame for s in project.shots}
     print(f"[nano] project={project_dir} | model={model} | char_ref={char_ref} | scene_ref={project.scene_ref or '-'}")
 
     for shot in project.shots:
@@ -132,7 +133,19 @@ def run_project(client, model: str, project_dir: str, ref_override: str | None,
             print(f"[skip] {shot.id}: no frame_prompt")
             continue
         fp = shot.frame_prompt.strip()
-        if shot.use_ref:
+        if shot.base:
+            # chain off another shot's frame: keep the SAME person in the SAME seat/pose,
+            # only change the action/framing. (base frame is generated earlier in the loop.)
+            base_path = frame_by_id.get(shot.base)
+            if not base_path or not os.path.isfile(base_path):
+                raise SystemExit(f"[nano] {shot.id} 基于 {shot.base}，但 {shot.base} 的帧还没生成 —— "
+                                 f"先生成 {shot.base}（不要带 --shot 跑全部，或先单独出 {shot.base}）。")
+            this_refs = _load_refs([base_path]) + char_img
+            prompt = "，".join(x for x in (fp, style) if x)
+            prompt = (f"{prompt}。第一张参考图给出这一幕的座位、构图与车厢场景，第二张参考图给出这个女孩的相貌；"
+                      f"保持同一个女孩、坐在与第一张完全相同的座位与姿态（她始终坐着），只改变画面所述的动作与景别。竖构图 9:16。")
+            kind = f"base:{shot.base}"
+        elif shot.use_ref:
             # protagonist (+ set): 1st image = the character, 2nd = the scene
             this_refs = char_img + scene_img
             prompt = "，".join(x for x in (appearance, fp, style) if x)
