@@ -12,8 +12,15 @@ set -e
 COMFY="${COMFY:-/content/ComfyUI}"
 
 echo "[comfyui] installing into $COMFY"
-if [ ! -d "$COMFY" ]; then
-  git clone --depth 1 https://github.com/comfyanonymous/ComfyUI "$COMFY"
+# Check for main.py, NOT just the dir: a partial/leftover dir (e.g. only models/)
+# would otherwise skip the clone and leave ComfyUI's code missing.
+if [ ! -f "$COMFY/main.py" ]; then
+  echo "[comfyui] cloning ComfyUI (preserving any existing models/)"
+  tmp="$(mktemp -d)"
+  git clone --depth 1 https://github.com/comfyanonymous/ComfyUI "$tmp/ComfyUI"
+  mkdir -p "$COMFY"
+  cp -rn "$tmp/ComfyUI/." "$COMFY/"   # add code without clobbering downloaded models
+  rm -rf "$tmp"
 fi
 # ComfyUI does NOT pin torch (Colab ships it); this installs its other deps.
 pip install -q -r "$COMFY/requirements.txt"
@@ -34,7 +41,8 @@ command -v aria2c >/dev/null 2>&1 || { echo "[comfyui] installing aria2"; apt-ge
 AUTH=()
 [ -n "${HF_TOKEN:-}" ] && AUTH=(--header="Authorization: Bearer ${HF_TOKEN}")
 dl() {  # dl <url> <target-dir>  — filename = url basename; resumes; 16 connections
-  aria2c -x16 -s16 -k1M --continue=true --console-log-level=warn "${AUTH[@]}" -d "$2" "$1"
+  echo "[comfyui] downloading $(basename "$1") -> $2"
+  aria2c -x16 -s16 -k1M --continue=true "${AUTH[@]}" -d "$2" "$1"
 }
 
 echo "[comfyui] downloading Wan 2.2 I2V models (fp8 experts + lightx2v 4-step LoRAs)"
