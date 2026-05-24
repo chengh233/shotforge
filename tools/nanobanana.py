@@ -58,7 +58,20 @@ def generate(client, model: str, prompt: str, refs: list, out_path: str) -> None
     """One call: prompt (+ optional reference images) -> save the first image."""
     from PIL import Image  # noqa: WPS433
 
-    resp = client.models.generate_content(model=model, contents=[prompt, *refs])
+    try:
+        resp = client.models.generate_content(model=model, contents=[prompt, *refs])
+    except Exception as exc:  # noqa: BLE001 — surface the common billing case cleanly
+        msg = str(exc)
+        if "RESOURCE_EXHAUSTED" in msg or "429" in msg:
+            raise SystemExit(
+                "[nano] 429 quota exceeded. Image generation (Nano Banana) is NOT on the free "
+                "tier (limit: 0) — you must enable BILLING on the API key's Google Cloud project, "
+                "then re-run.\n"
+                "  AI Studio: https://aistudio.google.com/  (open the key's project -> set up billing)\n"
+                "  or Cloud Console -> Billing -> link a billing account.\n"
+                "  Cost ~$0.039/image (18 images ~ $0.70)."
+            )
+        raise
     cands = getattr(resp, "candidates", None) or []
     if not cands:
         raise SystemExit(f"[nano] no candidates returned (blocked?): {getattr(resp, 'prompt_feedback', '')}")
