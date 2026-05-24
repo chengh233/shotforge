@@ -22,7 +22,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 
-USAGE = "usage: python run.py <setup|genref|frames|video|stitch|dub|subs|post> [project|character] [extra args]"
+USAGE = ("usage: python run.py <setup|genref|train|frames|frames-lora|video|stitch|dub|subs|post> "
+         "[project|character] [extra args]")
 
 
 def run(*cmd: str) -> None:
@@ -45,8 +46,12 @@ def main() -> None:
 
     if stage == "genref":  # `project` here is a character id (characters/<id>)
         run(PY, "-m", "shotforge.genref", "--character", project, *extra)
+    elif stage == "train":  # `project` here is a character id — train its LoRA (GPU)
+        run(PY, "scripts/train_lora.py", "--character", project, *extra)
     elif stage == "frames":
         run(PY, "-m", "shotforge.frames", "--project", project, *extra)
+    elif stage == "frames-lora":  # T2I + character LoRA (the consistent + free-framing path)
+        run(PY, "-m", "shotforge.frames_lora", "--project", project, *extra)
     elif stage == "video":
         run(PY, "-m", "shotforge.generate", "--project", project, "--engine", "comfy", *extra)
     elif stage == "stitch":

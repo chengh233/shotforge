@@ -6,4 +6,5 @@ personality: "安静、温柔、内向，习惯把心事藏起来；细腻、念
 tone: "轻声细语，句子短，略带文艺、内省"   # 写台词时的语气参考
 voice: zh-CN-XiaoxiaoNeural               # edge-tts 声音（配音用）
 ref: ref.png                              # 参考图（python run.py genref yuki 生成，或自己放）
-lora: null                                # 训了角色 LoRA 再填（Phase 2）
+lora: null                                # 训了角色 LoRA 再填（python run.py train yuki 后会放到 ComfyUI/models/loras/yuki.safetensors）
+lora_trigger: yuki                        # 提示词里激活 LoRA 的触发词（训练 caption 与出图都用它）

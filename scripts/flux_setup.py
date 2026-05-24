@@ -18,14 +18,15 @@ COMFY = os.environ.get("COMFY", "/content/ComfyUI")
 PORT = int(os.environ.get("PORT", "8188"))
 HF = os.environ.get("HF_TOKEN")
 
-# (subfolder, url). Flux Kontext (for the `frames` stage) + an anime SDXL
-# checkpoint (for `genref` — generating character reference images open-source).
+# (subfolder, url). Flux Kontext (for the `frames` Kontext path) + Illustrious-XL,
+# the anime SDXL base used for `genref`, character-LoRA training, and T2I+LoRA
+# `frames-lora`. Illustrious has the richest anime/LoRA ecosystem and trains fast.
 FILES = [
     ("diffusion_models", "https://huggingface.co/Comfy-Org/flux1-kontext-dev_ComfyUI/resolve/main/split_files/diffusion_models/flux1-dev-kontext_fp8_scaled.safetensors"),
     ("vae", "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors"),
     ("text_encoders", "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"),
     ("text_encoders", "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors"),
-    ("checkpoints", "https://huggingface.co/cagliostrolab/animagine-xl-4.0/resolve/main/animagine-xl-4.0.safetensors"),
+    ("checkpoints", "https://huggingface.co/OnomaAIResearch/Illustrious-XL-v1.0/resolve/main/Illustrious-XL-v1.0.safetensors"),
 ]
 
 

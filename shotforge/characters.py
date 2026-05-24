@@ -24,6 +24,7 @@ class Character:
     voice: str = ""           # edge-tts voice id (for tools.dub)
     ref: str = ""             # absolute path to the reference image (may not exist yet)
     lora: str = ""            # absolute path to a trained LoRA (optional, Phase 2)
+    lora_trigger: str = ""    # token that activates the LoRA in prompts (defaults to the id)
 
 
 def characters_dir() -> str:
@@ -49,6 +50,7 @@ def load_character(char: str) -> Character:
         voice=str(data.get("voice", "")),
         ref=os.path.join(cdir, str(ref)) if ref else "",
         lora=os.path.join(cdir, str(lora)) if lora else "",
+        lora_trigger=str(data.get("lora_trigger", "") or os.path.basename(os.path.normpath(cdir))),
     )
 
 

@@ -5,6 +5,7 @@ projects/*/out/
 *.mp4
 hf_cache/
 .venv/
+characters/**/*.safetensors
 
 # Claude Code personal (machine-local) settings; shared .claude/ config is fine to commit
 .claude/settings.local.json

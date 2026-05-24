@@ -1,7 +1,7 @@
 {
  "4": {
   "inputs": {
-   "ckpt_name": "animagine-xl-4.0.safetensors"
+   "ckpt_name": "Illustrious-XL-v1.0.safetensors"
   },
   "class_type": "CheckpointLoaderSimple",
   "_meta": {
@@ -113,7 +113,7 @@
  },
  "12": {
   "inputs": {
-   "ckpt_name": "animagine-xl-4.0.safetensors"
+   "ckpt_name": "Illustrious-XL-v1.0.safetensors"
   },
   "class_type": "CheckpointLoaderSimple",
   "_meta": {
