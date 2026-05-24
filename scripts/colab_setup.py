@@ -80,10 +80,14 @@ def restart_comfyui() -> None:
     print("[setup] (re)starting ComfyUI so it re-scans the models")
     subprocess.run("pkill -f 'ComfyUI/main.py'", shell=True)
     time.sleep(3)
+    # Fully detach: own session + stdout/stderr to a log file + stdin from
+    # /dev/null. Otherwise the launching notebook cell keeps spinning forever,
+    # holding the stdout pipe open even after this script is done.
+    logf = open("/content/comfyui.log", "ab")
     subprocess.Popen(
-        f"setsid python {COMFY}/main.py --listen 0.0.0.0 --port {PORT} "
-        f"> /content/comfyui.log 2>&1 < /dev/null",
-        shell=True,
+        [sys.executable, f"{COMFY}/main.py", "--listen", "0.0.0.0", "--port", str(PORT)],
+        stdout=logf, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+        start_new_session=True,
     )
 
 
