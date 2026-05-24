@@ -29,9 +29,12 @@ def run_frames(project_dir, engine=None, shot=None, variations=1, overwrite=Fals
         if not s.frame_prompt.strip():
             print(f"[skip] {s.id}: no content/frame_prompt")
             continue
+        # a still master is the spatial anchor for `base:` chaining — always one
+        # file (s0.jpeg), never variation-suffixed, so base lookups resolve.
+        vcount = 1 if s.still else max(1, variations)
         base, ext = os.path.splitext(s.frame)
-        for v in range(max(1, variations)):
-            out = s.frame if variations <= 1 else f"{base}_{v + 1}{ext}"
+        for v in range(vcount):
+            out = s.frame if vcount <= 1 else f"{base}_{v + 1}{ext}"
             if os.path.isfile(out) and not overwrite:
                 print(f"[skip] {out} exists (use --overwrite)")
                 continue
