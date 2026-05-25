@@ -13,7 +13,8 @@ import os
 
 from .base import ImageSpec
 
-WORKFLOW = os.environ.get("QWEN_WORKFLOW", "comfyui/qwen_image_api.json")
+WORKFLOW = os.environ.get("QWEN_WORKFLOW", "comfyui/qwen_image_api.json")            # text-to-image
+EDIT_WORKFLOW = os.environ.get("QWEN_EDIT_WORKFLOW", "comfyui/qwen_edit_api.json")   # reference edit
 COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8188")
 
 
@@ -21,16 +22,19 @@ class QwenImageEngine:
     name = "qwen"
 
     def generate(self, spec: ImageSpec) -> None:
-        if not os.path.isfile(WORKFLOW):
+        # refs present (e.g. an end-frame edited from the start) -> Qwen-Image-Edit;
+        # no refs -> plain text-to-image.
+        path = EDIT_WORKFLOW if spec.refs else WORKFLOW
+        if not os.path.isfile(path):
+            kind = "Qwen-Image-Edit（参考编辑）" if spec.refs else "Qwen-Image（文生图）"
             raise SystemExit(
-                f"[qwen] 未找到工作流：{WORKFLOW}\n"
+                f"[qwen] 未找到{kind}工作流：{path}\n"
                 "  1) 装模型： python scripts/qwen_setup.py\n"
-                "  2) 取工作流：ComfyUI GUI 打开 Qwen-Image（或 Qwen-Image-Edit）模板 → Export(API) → 存到该路径\n"
-                "  （或设 $QWEN_WORKFLOW）"
+                f"  2) ComfyUI 打开 {kind} 模板 → Export(API) → 存到该路径（或设环境变量）"
             )
         from shotforge import frames as cf   # reuse the ComfyUI plumbing
 
-        wf = cf.load_workflow(WORKFLOW)
+        wf = cf.load_workflow(path)
         # refs -> LoadImage nodes (only when it's an Edit workflow with image inputs)
         loaders = cf._ids(wf, "LoadImage")
         if loaders and spec.refs:

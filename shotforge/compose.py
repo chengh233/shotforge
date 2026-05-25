@@ -85,6 +85,21 @@ def build_image_spec(project: Project, shot: Shot) -> ImageSpec:
     )
 
 
+def build_end_image_spec(project: Project, shot: Shot) -> ImageSpec:
+    """Generate the END keyframe as an EDIT of the start frame — same scene/view/
+    light, motion advanced a little — so start↔end stay consistent for FLF2V."""
+    g = _glue()
+    refs = [_require(shot.frame, f"{shot.id} 的起始帧（生成尾帧需要它）")]
+    loras: list[Lora] = []
+    if project.style_el and project.style_el.lora:
+        loras.append(Lora(os.path.basename(project.style_el.lora), project.style_el.lora_trigger))
+    parts = [shot.end_content.strip(), project.style_positive]
+    prompt = "，".join(p for p in parts if p and p.strip())
+    prompt = f"{prompt}。{g.get('end', '')}{g.get('aspect', '')}"
+    return ImageSpec(out=shot.end_frame, prompt=prompt, refs=refs, loras=loras[:3],
+                     negative=project.style_negative, width=shot.width, height=shot.height, seed=shot.seed + 7)
+
+
 def build_motion_spec(project: Project, shot: Shot, out: str, t2v: bool = False) -> MotionSpec:
     # I2V: the frame carries appearance/scene, so the prompt is just camera+action+suffix.
     # T2V: no frame — prepend the subjects' appearance + scene description so the text
@@ -99,7 +114,7 @@ def build_motion_spec(project: Project, shot: Shot, out: str, t2v: bool = False)
     return MotionSpec(
         frame=shot.frame, out=out, prompt=prompt, negative=shot.negative,
         seconds=shot.seconds, fps=project.fps, seed=shot.seed,
-        width=shot.width, height=shot.height,
+        width=shot.width, height=shot.height, end_frame=shot.end_frame,
     )
 
 

@@ -36,6 +36,8 @@ class Shot:
     subjects: list[str] = field(default_factory=list)  # cast roles IN this frame ([] = extras/scenery)
     speaker: str = ""         # cast role whose dialogue/voice this shot carries
     still: bool = False       # frame-only master/blocking shot: generated + usable as `base`, NOT animated
+    end_frame: str = ""       # FLF2V: the END keyframe (start = `frame`); the model fills the motion between
+    end_content: str = ""     # prompt to GENERATE the end keyframe — best as an EDIT of the start (consistent)
 
 
 @dataclass
@@ -154,6 +156,10 @@ def load_project(path: str) -> Project:
             subjects=subjects,
             speaker=speaker,
             still=bool(merged.get("still", False)),
+            end_content=str(merged.get("end_content", "")),
+            end_frame=(os.path.join(path, str(merged["end_frame"])) if merged.get("end_frame")
+                       else (os.path.join(path, "frames", f"{merged['id']}_end.jpeg")
+                             if merged.get("end_content") else "")),
         ))
 
     name = str(data.get("project") or data.get("title") or os.path.basename(os.path.abspath(path)))

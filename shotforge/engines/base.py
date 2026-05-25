@@ -46,6 +46,7 @@ class MotionSpec:
     seed: int = 0
     width: int = 0            # 0 -> let the engine derive from the frame aspect
     height: int = 0
+    end_frame: str = ""       # optional END keyframe (FLF2V engines fill the motion frame->end_frame)
 
 
 @dataclass

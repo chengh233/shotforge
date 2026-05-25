@@ -43,6 +43,14 @@ def run_frames(project_dir, engine=None, shot=None, variations=1, overwrite=Fals
             tag = "" if variations <= 1 else f" v{v + 1}"
             print(f"[frames] {s.id}{tag} | subjects={s.subjects or '—'} | refs={len(spec.refs)} | loras={len(spec.loras)} -> {out}")
             eng.generate(spec)
+        # FLF2V: generate the END keyframe as an edit of the (now-existing) start frame
+        if s.end_content and os.path.isfile(s.frame):
+            if os.path.isfile(s.end_frame) and not overwrite:
+                print(f"[skip] {s.end_frame} exists (use --overwrite)")
+            else:
+                espec = compose.build_end_image_spec(project, s)
+                print(f"[frames] {s.id} END (edit of start) -> {s.end_frame}")
+                eng.generate(espec)
     print("[ok] frames done")
 
 
