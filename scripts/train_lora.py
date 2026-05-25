@@ -103,8 +103,16 @@ def _ensure_torchaudio(venv_py: str) -> None:
     ver = parts[0]
     cu = parts[1] if len(parts) > 1 else ""
     idx = f"https://download.pytorch.org/whl/cu{cu.replace('.', '')}" if cu else "https://download.pytorch.org/whl/cpu"
-    print(f"[train] installing torchaudio=={ver} (torch CUDA={cu or 'cpu'}) for ai-toolkit")
-    sh(venv_py, "-m", "pip", "install", "-q", f"torchaudio=={ver}", "--index-url", idx, "--no-deps")
+    # Exact match first; nightly/preview torch often has no matching torchaudio release yet,
+    # so fall back to the newest torchaudio on the same CUDA index (--no-deps keeps torch put).
+    for spec in (f"torchaudio=={ver}", "torchaudio"):
+        try:
+            print(f"[train] installing {spec} from {idx} (--no-deps) for ai-toolkit")
+            sh(venv_py, "-m", "pip", "install", "-q", spec, "--index-url", idx, "--no-deps")
+            return
+        except subprocess.CalledProcessError:
+            continue
+    raise SystemExit(f"[train] no torchaudio on {idx} matching torch {ver} — install one by hand")
 
 
 def main() -> None:
