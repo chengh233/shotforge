@@ -11,8 +11,9 @@ title: 高空坠落
 model: wan-480p
 fps: 16
 engines:
-  image: qwen            # 起始帧=Qwen文生图；尾帧(带参考)自动走 Qwen-Image-Edit
-  video: wan-flf         # 首尾帧补间（比单帧 I2V 稳）
+  image: qwen            # 起始帧=Qwen 文生图（质量好）
+  video: wan             # 普通 I2V：直接动起始帧。POV 空镜不适合 Qwen-Edit 出尾帧(会重画/不一致)，
+                         # 改用"放缓动作 + 单帧 I2V"求稳。尾帧因此不生成(已 gate 在 flf 引擎)。
 style: action
 
 defaults:
