@@ -23,9 +23,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 
-USAGE = ("usage: python run.py <setup|genref|frames|manga|video|dub|subs|lipsync|post|stitch> "
+USAGE = ("usage: python run.py <setup|genref|train|frames|verify|manga|video|dub|subs|lipsync|post|stitch> "
          "[project|character] [extra args]\n"
-         "  frames/video/lipsync go through shotforge.pipeline (compose + pluggable engines)")
+         "  frames/video/lipsync go through shotforge.pipeline (compose + pluggable engines)\n"
+         "  set COMFY_URL=<cloudflared url> to drive a remote Colab ComfyUI from your Mac")
 
 
 def run(*cmd: str) -> None:
@@ -56,6 +57,8 @@ def main() -> None:
         run(PY, "-m", "shotforge.pipeline", stage, "--project", project, *extra)
     elif stage == "manga":  # assemble frames into a 条漫/storyboard page (read it as stills)
         run(PY, "-m", "tools.manga", "--project", project, *extra)
+    elif stage == "verify":  # VLM checks each frame vs its intent (auto QA gate)
+        run(PY, "-m", "tools.verify", "--project", project, *extra)
     elif stage == "stitch":
         run(PY, "-m", "tools.stitch", "--project", project)
     elif stage in ("dub", "voice"):
