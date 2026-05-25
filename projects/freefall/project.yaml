@@ -1,0 +1,64 @@
+# 第一人称极限运动 / 高空坠落，约 30s（6 镜 × 5s），480p。
+# 每镜：Qwen 开源出一张第一人称 POV 静帧 → Wan I2V 动起来。无角色、无台词（配乐+风声）。
+#
+# 流程：python run.py frames projects/freefall  (Qwen 出 6 张)
+#       python run.py manga  projects/freefall  (看分镜)
+#       python run.py video  projects/freefall  (480p I2V)
+#       python run.py post   projects/freefall --music <激烈音乐>.mp3
+
+title: 高空坠落
+model: wan-480p          # 480p（轻快）
+fps: 16
+engines:
+  image: qwen            # 开源出图（Qwen-Image，T2I 工作流）
+  video: wan             # I2V：每镜从那张图动起来
+style: action            # 第一人称运动相机/GoPro 写实
+
+defaults:
+  seconds: 5
+  seed: 0
+  negative: "动画，卡通，CG渲染，最差质量，低质量，畸形，水印，文字，静止不动的画面，多个不同的人"
+
+shots:
+  # s1 · 临跳·崖边俯瞰（紧张定场）
+  - id: s1
+    frame: frames/s1.jpeg
+    camera: slow_push
+    content: "第一人称POV：站在高耸悬崖的边缘向下俯瞰，脚尖探出崖边，远处是翻涌的云海与缩小的群山大地，眩晕的高度感；明亮日光"
+    action:  "镜头微微前倾向下望，风掠过，脚下的云海与远处大地缓缓移动，临跳前的紧张感"
+
+  # s2 · 纵身一跃（坠落开始）
+  - id: s2
+    frame: frames/s2.jpeg
+    camera: dolly_in
+    content: "第一人称POV：纵身跃下的瞬间，画面向下倾斜，脚下是急速逼近的云层与大地，强烈的坠落开始感；动感模糊"
+    action:  "镜头骤然向下俯冲、画面翻转，云层与大地急速扑面而来，强烈的坠落速度感"
+
+  # s3 · 自由落体·穿云
+  - id: s3
+    frame: frames/s3.jpeg
+    camera: dolly_in
+    content: "第一人称POV：高空自由落体穿过翻涌的白色云层，双臂在画面边缘张开，下方隐约是辽阔大地"
+    action:  "第一人称俯冲穿过翻涌的云层，云雾高速向画面两侧掠过，强烈的失重与风驰感"
+
+  # s4 · 翼装飞行·贴壁飞掠
+  - id: s4
+    frame: frames/s4.jpeg
+    camera: dolly_in
+    content: "第一人称POV：翼装飞行贴着陡峭岩壁高速掠过，两侧是嶙峋的山脊与深邃峡谷，极近的崖壁"
+    action:  "贴着岩壁高速飞掠，崖壁与山脊在两侧飞速向后退去，极强的贴地速度感"
+
+  # s5 · 低空·掠过湖面
+  - id: s5
+    frame: frames/s5.jpeg
+    camera: dolly_in
+    content: "第一人称POV：低空高速掠过碧蓝的湖面，水面在脚下飞速流过、反射着阳光，远处是青翠山林"
+    action:  "贴着湖面低空高速掠过，水面在脚下飞速流过，波光与水汽四溅"
+
+  # s6 · 开伞·飘向大地（收尾·松一口气）
+  - id: s6
+    frame: frames/s6.jpeg
+    seconds: 6
+    camera: crane_up
+    content: "第一人称POV：降落伞刚刚打开，仰头可见彩色伞面，画面平稳地飘向辽阔的大地与地平线，金色阳光，开阔放松"
+    action:  "降落伞打开、画面骤然减速，平稳地飘向辽阔大地，松一口气的开阔感"

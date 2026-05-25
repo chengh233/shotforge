@@ -1,0 +1,7 @@
+# 画风库条目 —— 第一人称运动相机/GoPro 写实极限运动。剧本里用 `style: action`。
+name: 运动相机
+positive: "photorealistic first-person POV action-camera footage, ultra-wide GoPro fisheye lens, vivid bright daylight, high dynamic range, immersive, strong sense of speed and motion blur, highly detailed"
+negative: "anime, cartoon, cgi, illustration, lowres, deformed, watermark, text, jpeg artifacts"
+video_suffix: "第一人称运动相机视角，GoPro 广角镜头，强烈的速度与失重感，真实画面"
+ref: null
+lora: null
