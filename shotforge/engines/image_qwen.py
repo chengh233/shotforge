@@ -40,14 +40,18 @@ class QwenImageEngine:
         if loaders and spec.refs:
             for nid, ref in zip(loaders, spec.refs):
                 wf[nid]["inputs"]["image"] = cf._upload_image(COMFY_URL, ref)
-        # prompt = longest-text CLIPTextEncode (positive); the rest get the negative
-        encs = cf._ids(wf, "CLIPTextEncode")
+        # set the prompt on the text-encode node(s). Handles both CLIPTextEncode (T2I)
+        # and TextEncodeQwenImageEdit / *Plus (Edit), whose field may be text or prompt.
+        def _tf(n):
+            inp = n.get("inputs", {})
+            return "text" if "text" in inp else ("prompt" if "prompt" in inp else None)
+        encs = [nid for nid, n in wf.items() if "TextEncode" in str(n.get("class_type", "")) and _tf(n)]
         if encs:
-            pos = max(encs, key=lambda nid: len(str(wf[nid]["inputs"].get("text", ""))))
-            wf[pos]["inputs"]["text"] = spec.prompt
+            pos = max(encs, key=lambda nid: len(str(wf[nid]["inputs"].get(_tf(wf[nid]), ""))))
+            wf[pos]["inputs"][_tf(wf[pos])] = spec.prompt
             for nid in encs:
                 if nid != pos:
-                    wf[nid]["inputs"]["text"] = spec.negative
+                    wf[nid]["inputs"][_tf(wf[nid])] = spec.negative
         # output size + seed. Qwen wants >=~1024px; the video engine downscales the
         # frame to its own (e.g. 480p) budget, so generate the still bigger for quality.
         w, h = spec.width, spec.height
