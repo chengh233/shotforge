@@ -31,6 +31,9 @@ FILES = [
     ("diffusion_models", f"{BASE}/diffusion_models/wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors"),
     ("text_encoders", f"{BASE}/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"),
     ("vae", f"{BASE}/vae/wan_2.1_vae.safetensors"),
+    # lightx2v 4-step speed LoRAs (the T2V template's "Missing Models")
+    ("loras", f"{BASE}/loras/wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors"),
+    ("loras", f"{BASE}/loras/wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors"),
 ]
 
 
