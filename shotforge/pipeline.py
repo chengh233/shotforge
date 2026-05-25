@@ -20,7 +20,7 @@ def run_frames(project_dir, engine=None, shot=None, variations=1, overwrite=Fals
     project = load_project(project_dir)
     if project.engines.get("image_model"):   # e.g. gemini-3-pro-image-preview (Nano Banana Pro)
         os.environ["NANOBANANA_MODEL"] = project.engines["image_model"]
-    name = engine or project.engines.get("image", "nanobanana")
+    name = engine or project.engines.get("image", "qwen")   # 默认 Qwen-Image（全开源）
     eng = get_engine("image", name)
     print(f"[frames] {project.name} | engine={name} | cast={project.cast_map} | scene={project.scene} | style={project.style}")
     for s in project.shots:
