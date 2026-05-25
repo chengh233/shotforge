@@ -22,9 +22,11 @@ HF = os.environ.get("HF_TOKEN")
 BASE = "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files"
 
 FILES = [
-    ("diffusion_models", f"{BASE}/diffusion_models/qwen_image_fp8_e4m3fn.safetensors"),
+    ("diffusion_models", f"{BASE}/diffusion_models/qwen_image_2512_fp8_e4m3fn.safetensors"),
     ("text_encoders", f"{BASE}/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"),
     ("vae", f"{BASE}/vae/qwen_image_vae.safetensors"),
+    # Lightning 4-step speed LoRA (the 2512 template's "Missing Models"); from lightx2v
+    ("loras", "https://huggingface.co/lightx2v/Qwen-Image-2512-Lightning/resolve/main/Qwen-Image-2512-Lightning-4steps-V1.0-fp32.safetensors"),
 ]
 
 
