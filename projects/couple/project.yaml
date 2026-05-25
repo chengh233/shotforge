@@ -1,0 +1,54 @@
+# 第一人称情侣问答（男友视角）。最稳的做法：I2V —— 所有段都从同一张女友照片动起来，
+# 人脸/场景跨段完全一致；每段是她不同的反应+台词。男友=镜头(不出镜)，女友对镜头(=对着你)说话。
+#
+# 你要做的：用 nano banana 出一张女友照片（她直视镜头、温馨居家、写实、竖屏 9:16），
+#   存到 projects/couple/frames/gf.jpeg —— 所有段共用这一张。
+# 然后：python run.py video projects/couple  →  dub  →  post
+# 提示词建议见对话；每段 ≤5s（Wan 甜区）。
+
+title: 情侣问答
+fps: 16
+engines:
+  video: wan        # I2V：动你那张女友照片（用已有的 comfyui/wan_i2v_api.json，不需要 T2V）
+
+cast: {girlfriend: xiaolu}
+style: vlog          # 写实手机自拍质感
+
+defaults:
+  seconds: 5
+  seed: 0
+  camera: handheld   # 第一人称手持感
+  negative: "动画，卡通，插画，最差质量，低质量，畸形的脸，多余的手指，多个不同的人，水印，文字，静止不动"
+
+shots:
+  # 每段都用同一张 frames/gf.jpeg 当起始帧 → 人物/场景一致；只有"她在说什么/做什么反应"在变。
+  # 男友的问题/梗写在注释里（可在 post 里加成字幕，或你自己念旁白）；台词=女友的话。
+
+  # s1 · 开场·设定游戏  （男友：来玩个游戏？）
+  - id: s1
+    frame: frames/gf.jpeg
+    speaker: girlfriend
+    action: "女友对着镜头眨眨眼、笑着竖起一根手指比‘1’，俏皮地说话，身体微微前倾；轻微手持晃动"
+    dialogue: "来，今天跟你玩个小游戏，我问你答——输了的人请喝奶茶哦！"
+
+  # s2 · 出题  （女友抛出问题）
+  - id: s2
+    frame: frames/gf.jpeg
+    speaker: girlfriend
+    action: "女友歪着头、坏笑着对镜头说话，眼神俏皮带点挑衅，手指轻点下巴"
+    dialogue: "第一题：你还记得我们第一次约会去哪了吗？想不起来今晚就归你洗碗～"
+
+  # s3 · 打趣反应  （看你答不上来）
+  - id: s3
+    frame: frames/gf.jpeg
+    speaker: girlfriend
+    action: "女友捂着嘴笑出声、身体微微前倾打趣，开心又得意，眼睛弯成月牙"
+    dialogue: "诶——表情怎么慌了？看来今晚的碗，有着落咯，哈哈哈。"
+
+  # s4 · 甜蜜收尾  （比心飞吻）
+  - id: s4
+    frame: frames/gf.jpeg
+    seconds: 6
+    speaker: girlfriend
+    action: "女友对着镜头甜甜一笑、抬手比一个心（飞吻），温柔地收尾，眼神含笑看着镜头"
+    dialogue: "好啦不逗你了，今天就到这儿——记得想我哦，么么哒。"
