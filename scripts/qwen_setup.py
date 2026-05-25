@@ -27,6 +27,9 @@ FILES = [
     ("vae", f"{BASE}/vae/qwen_image_vae.safetensors"),
     # Lightning 4-step speed LoRA (the 2512 template's "Missing Models"); from lightx2v
     ("loras", "https://huggingface.co/lightx2v/Qwen-Image-2512-Lightning/resolve/main/Qwen-Image-2512-Lightning-4steps-V1.0-fp32.safetensors"),
+    # Qwen-Image-Edit 2511 (latest/best edit model) + its 4-step Lightning LoRA — for FLF2V end frames
+    ("diffusion_models", "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_fp8mixed.safetensors"),
+    ("loras", "https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/main/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-fp32.safetensors"),
 ]
 
 
