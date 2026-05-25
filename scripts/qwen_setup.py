@@ -60,8 +60,19 @@ def main() -> None:
         [sys.executable, f"{COMFY}/main.py", "--listen", "0.0.0.0", "--port", str(PORT)],
         stdout=logf, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True,
     )
-    print("[qwen] done. Next: export the Qwen-Image template as API -> comfyui/qwen_image_api.json,\n"
-          "        set a project `engines: image: qwen`, then: python run.py frames <project>")
+    # wait until ComfyUI is actually listening, so the next stage doesn't race it
+    import urllib.request
+    print("[qwen] waiting for ComfyUI to be ready...")
+    for _ in range(90):
+        time.sleep(2)
+        try:
+            urllib.request.urlopen(f"http://127.0.0.1:{PORT}/", timeout=3)
+            print("[qwen] ComfyUI ready"); break
+        except Exception:
+            pass
+    else:
+        print("[qwen] ComfyUI 还没就绪，看 /content/comfyui.log")
+    print("[qwen] done. Next: python run.py frames <project>")
 
 
 if __name__ == "__main__":
