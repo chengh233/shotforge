@@ -28,8 +28,9 @@ class WanT2VEngine:
         if not os.path.isfile(WORKFLOW):
             raise SystemExit(
                 f"[wan-t2v] 未找到 T2V 工作流：{WORKFLOW}\n"
-                "  在 ComfyUI 里装好 Wan 2.2 T2V 模型、导出一个 T2V API 工作流存到该路径"
-                "（或设 $WAN_T2V_WORKFLOW）。注意 T2V 模型与 I2V 不同。"
+                "  1) 装 T2V 模型： python scripts/wan_t2v_setup.py\n"
+                "  2) 取工作流：ComfyUI GUI 打开「Wan 2.2 14B Text to Video」模板 → Export(API) → 存到该路径\n"
+                "  （或设 $WAN_T2V_WORKFLOW 指向你的工作流）"
             )
         from shotforge import comfy
         from shotforge.manifest import frames_for
