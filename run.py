@@ -50,6 +50,8 @@ def main() -> None:
 
     if stage == "genref":  # `project` here is a character id (characters/<id>)
         run(PY, "-m", "shotforge.genref", "--character", project, *extra)
+    elif stage == "train":  # `project` here is a character id — train its FLUX LoRA (GPU)
+        run(PY, "scripts/train_lora.py", "--character", project, *extra)
     elif stage in ("frames", "video", "lipsync"):   # compose + pluggable engines
         run(PY, "-m", "shotforge.pipeline", stage, "--project", project, *extra)
     elif stage == "manga":  # assemble frames into a 条漫/storyboard page (read it as stills)

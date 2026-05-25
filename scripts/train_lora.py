@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Train a character LoRA on FLUX.1-dev with ai-toolkit (ostris) — the most proven
+FLUX character-LoRA path. Reads characters/<id>/dataset/ and writes the LoRA to
+ComfyUI/models/loras/<id>.safetensors (+ a repo copy for backup).
+
+    python scripts/train_lora.py --character mira --trigger mira
+    python run.py train mira --trigger mira
+
+Prereqs (one-time, GPU box):
+  - HF_TOKEN env, and accept the FLUX.1-dev license once at
+    https://huggingface.co/black-forest-labs/FLUX.1-dev  (ai-toolkit downloads it).
+ai-toolkit runs in its own venv (reusing system torch). This is the heaviest step
+and the one most likely to need a tweak on a given image; the config it writes +
+the command it runs are printed so you can rerun/adjust by hand.
+"""
+from __future__ import annotations
+
+import argparse
+import glob
+import os
+import shutil
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+COMFY = os.environ.get("COMFY", "/content/ComfyUI")
+AI_TOOLKIT = os.environ.get("AI_TOOLKIT", "/content/ai-toolkit")
+VENV = os.environ.get("LORA_VENV", "/content/lora-venv")
+VENV_PY = os.path.join(VENV, "bin", "python")
+_IMG = (".png", ".jpg", ".jpeg", ".webp")
+
+_CONFIG = """\
+job: extension
+config:
+  name: {name}
+  process:
+    - type: sd_trainer
+      training_folder: {out}
+      device: cuda:0
+      network: {{ type: lora, linear: {rank}, linear_alpha: {rank} }}
+      save: {{ dtype: float16, save_every: {steps}, max_step_saves_to_keep: 1 }}
+      datasets:
+        - folder_path: {dataset}
+          caption_ext: txt
+          caption_dropout_rate: 0.05
+          resolution: [768, 1024]
+      train:
+        batch_size: 1
+        steps: {steps}
+        gradient_accumulation_steps: 1
+        train_unet: true
+        train_text_encoder: false
+        gradient_checkpointing: true
+        noise_scheduler: flowmatch
+        optimizer: adamw8bit
+        lr: 1e-4
+        dtype: bf16
+      model:
+        name_or_path: black-forest-labs/FLUX.1-dev
+        is_flux: true
+        quantize: true
+meta: {{ name: {name} }}
+"""
+
+
+def sh(*cmd: str, **kw) -> None:
+    print("$", " ".join(cmd))
+    subprocess.run(list(cmd), check=True, **kw)
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="Train a FLUX character LoRA with ai-toolkit.")
+    ap.add_argument("--character", required=True, help="character id (characters/<id>)")
+    ap.add_argument("--trigger", default=None, help="trigger word (default the id); also written as captions if missing")
+    ap.add_argument("--dataset", default=None, help="dataset dir (default characters/<id>/dataset)")
+    ap.add_argument("--steps", type=int, default=2000)
+    ap.add_argument("--rank", type=int, default=16)
+    a = ap.parse_args()
+
+    trigger = a.trigger or a.character
+    dataset = a.dataset or os.path.join(HERE, "characters", a.character, "dataset")
+    imgs = [p for p in glob.glob(os.path.join(dataset, "*")) if p.lower().endswith(_IMG)]
+    if not imgs:
+        raise SystemExit(f"[train] no images in {dataset} — run tools.dataset first.")
+    if not os.environ.get("HF_TOKEN"):
+        print("[train] WARNING: no $HF_TOKEN — FLUX.1-dev download will fail. Set it + accept the license on HF.")
+    # ensure every image has a caption (trigger word)
+    for p in imgs:
+        cap = os.path.splitext(p)[0] + ".txt"
+        if not os.path.isfile(cap):
+            open(cap, "w", encoding="utf-8").write(trigger)
+
+    if not os.path.isfile(os.path.join(AI_TOOLKIT, "run.py")):
+        sh("git", "clone", "--depth", "1", "https://github.com/ostris/ai-toolkit", AI_TOOLKIT)
+    if not os.path.isfile(VENV_PY):
+        sh(sys.executable, "-m", "venv", "--system-site-packages", VENV)
+        sh(VENV_PY, "-m", "pip", "install", "-q", "-U", "pip")
+        sh(VENV_PY, "-m", "pip", "install", "-q", "-r", os.path.join(AI_TOOLKIT, "requirements.txt"))
+
+    out_dir = os.path.join("/content", f"lora_out_{a.character}")
+    os.makedirs(out_dir, exist_ok=True)
+    cfg_path = os.path.join(out_dir, f"{a.character}.yaml")
+    with open(cfg_path, "w", encoding="utf-8") as fh:
+        fh.write(_CONFIG.format(name=a.character, out=out_dir, dataset=dataset, steps=a.steps, rank=a.rank))
+    print(f"[train] config -> {cfg_path}  (trigger={trigger!r}, {len(imgs)} imgs, {a.steps} steps)")
+    sh(VENV_PY, "run.py", cfg_path, cwd=AI_TOOLKIT)
+
+    produced = max(glob.glob(os.path.join(out_dir, "**", "*.safetensors"), recursive=True),
+                   key=os.path.getmtime, default=None)
+    if not produced:
+        raise SystemExit(f"[train] no .safetensors produced in {out_dir}")
+    loras = os.path.join(COMFY, "models", "loras")
+    os.makedirs(loras, exist_ok=True)
+    shutil.copy(produced, os.path.join(loras, f"{a.character}.safetensors"))
+    shutil.copy(produced, os.path.join(HERE, "characters", a.character, f"{a.character}.safetensors"))
+    print(f"[ok] LoRA -> {loras}/{a.character}.safetensors  (trigger word: {trigger!r})")
+    print("[next] use it with the FLUX image engine; back up the repo copy (Colab is ephemeral).")
+
+
+if __name__ == "__main__":
+    main()
