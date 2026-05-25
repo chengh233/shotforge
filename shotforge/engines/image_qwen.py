@@ -44,11 +44,16 @@ class QwenImageEngine:
             for nid in encs:
                 if nid != pos:
                     wf[nid]["inputs"]["text"] = spec.negative
-        # output size + seed
+        # output size + seed. Qwen wants >=~1024px; the video engine downscales the
+        # frame to its own (e.g. 480p) budget, so generate the still bigger for quality.
+        w, h = spec.width, spec.height
+        if max(w, h) < 1024:
+            f = 1024.0 / max(w, h)
+            w, h = int(round(w * f / 16)) * 16, int(round(h * f / 16)) * 16
         for n in wf.values():
             inp = n.get("inputs", {})
             if "width" in inp and "height" in inp:
-                inp["width"], inp["height"] = spec.width, spec.height
+                inp["width"], inp["height"] = w, h
             if str(n.get("class_type", "")).startswith("KSampler"):
                 if "seed" in inp:
                     inp["seed"] = spec.seed
