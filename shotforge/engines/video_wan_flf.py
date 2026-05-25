@@ -5,8 +5,8 @@ stability when the two keyframes are consistent (generate the end as an edit of 
 start) and close together (gentle motion).
 
 Needs a Wan FLF2V workflow exported from ComfyUI ($WAN_FLF_WORKFLOW, default
-comfyui/wan_flf_api.json) with TWO LoadImage inputs (start + end). The end loader
-is detected by a title containing end/last/尾; otherwise the second LoadImage.
+comfyui/wan_flf_api.json) with TWO LoadImage inputs. Start/end are mapped by
+tracing the WanFirstLastFrameToVideo node's start_image / end_image links.
 """
 from __future__ import annotations
 
@@ -34,11 +34,18 @@ class WanFLFEngine:
         loaders = [nid for nid, n in wf.items() if n.get("class_type") == "LoadImage"]
         if len(loaders) < 2:
             raise SystemExit(f"[wan-flf] 工作流只有 {len(loaders)} 个 LoadImage，需要 2 个（首帧+尾帧）。")
-        # pick the END loader by title keyword, else the 2nd loader
-        def _title(nid):
-            return str(wf[nid].get("_meta", {}).get("title", "")).lower()
-        end_nid = next((nid for nid in loaders if any(k in _title(nid) for k in ("end", "last", "尾", "结束"))), loaders[1])
-        start_nid = next((nid for nid in loaders if nid != end_nid), loaders[0])
+        # robust start/end mapping: trace the FLF node's start_image / end_image links
+        start_nid = end_nid = None
+        flf = next((n for n in wf.values() if n.get("class_type") == "WanFirstLastFrameToVideo"), None)
+        if flf:
+            si, ei = flf["inputs"].get("start_image"), flf["inputs"].get("end_image")
+            start_nid = str(si[0]) if isinstance(si, list) else None
+            end_nid = str(ei[0]) if isinstance(ei, list) else None
+        if not (start_nid and end_nid):   # fallback: title keyword, else order
+            def _t(nid):
+                return str(wf[nid].get("_meta", {}).get("title", "")).lower()
+            end_nid = end_nid or next((n for n in loaders if any(k in _t(n) for k in ("end", "last", "尾", "结束"))), loaders[1])
+            start_nid = start_nid or next((n for n in loaders if n != end_nid), loaders[0])
         wf[start_nid]["inputs"]["image"] = comfy._upload_image(COMFY_URL, spec.frame)
         wf[end_nid]["inputs"]["image"] = comfy._upload_image(COMFY_URL, spec.end_frame or spec.frame)
 
