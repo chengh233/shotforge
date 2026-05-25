@@ -85,10 +85,19 @@ def build_image_spec(project: Project, shot: Shot) -> ImageSpec:
     )
 
 
-def build_motion_spec(project: Project, shot: Shot, out: str) -> MotionSpec:
-    # prompt was already composed in manifest (camera + action + style suffix)
+def build_motion_spec(project: Project, shot: Shot, out: str, t2v: bool = False) -> MotionSpec:
+    # I2V: the frame carries appearance/scene, so the prompt is just camera+action+suffix.
+    # T2V: no frame — prepend the subjects' appearance + scene description so the text
+    # alone describes the whole shot (repeated verbatim each clip for consistency).
+    prompt = shot.prompt
+    if t2v:
+        parts = [project.cast_elements[r].prompt for r in shot.subjects if project.cast_elements.get(r)]
+        if project.scene_desc:
+            parts.append(project.scene_desc)
+        parts.append(shot.prompt)
+        prompt = "，".join(p for p in parts if p and p.strip())
     return MotionSpec(
-        frame=shot.frame, out=out, prompt=shot.prompt, negative=shot.negative,
+        frame=shot.frame, out=out, prompt=prompt, negative=shot.negative,
         seconds=shot.seconds, fps=project.fps, seed=shot.seed,
         width=shot.width, height=shot.height,
     )

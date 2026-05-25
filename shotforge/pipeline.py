@@ -50,21 +50,22 @@ def run_video(project_dir, engine=None, shot=None):
     project = load_project(project_dir)
     name = engine or project.engines.get("video", "wan")
     eng = get_engine("video", name)
+    t2v = "t2v" in name                      # text-to-video: no starting frame needed
     outdir = os.path.join(project_dir, "out")
     os.makedirs(outdir, exist_ok=True)
-    print(f"[video] {project.name} | engine={name} | fps={project.fps} | shots={len(project.shots)}")
+    print(f"[video] {project.name} | engine={name} | {'T2V' if t2v else 'I2V'} | fps={project.fps} | shots={len(project.shots)}")
     for s in project.shots:
         if shot and s.id != shot:
             continue
         if s.still:
             print(f"[skip] {s.id}: still master (not animated)")
             continue
-        if not os.path.isfile(s.frame):
+        if not t2v and not os.path.isfile(s.frame):
             print(f"[skip] {s.id}: frame not found -> {s.frame}")
             continue
         out = os.path.join(outdir, f"{s.id}.mp4")
         print(f"[render] {s.id} | {s.seconds}s @ {project.fps}fps | seed={s.seed}")
-        eng.animate(compose.build_motion_spec(project, s, out))
+        eng.animate(compose.build_motion_spec(project, s, out, t2v=t2v))
         print(f"[ok] {s.id} -> {out}")
     print("[ok] video done")
 
