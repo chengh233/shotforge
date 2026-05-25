@@ -38,7 +38,21 @@ config:
       training_folder: {out}
       device: cuda:0
       network: {{ type: lora, linear: {rank}, linear_alpha: {rank} }}
-      save: {{ dtype: float16, save_every: {steps}, max_step_saves_to_keep: 1 }}
+      save: {{ dtype: float16, save_every: {save_every}, max_step_saves_to_keep: 4 }}
+      sample:
+        sampler: flowmatch
+        sample_every: {sample_every}
+        width: 768
+        height: 1024
+        guidance_scale: 4
+        sample_steps: 20
+        seed: 42
+        walk_seed: true
+        neg: ""
+        prompts:
+          - "{trigger}, photorealistic portrait of a young woman, soft window light, upper body"
+          - "{trigger}, photorealistic, standing in a sunny cafe, full body, natural light"
+          - "{trigger}, photorealistic close-up, gentle smile, outdoor daylight, shallow depth of field"
       datasets:
         - folder_path: {dataset}
           caption_ext: txt
@@ -122,6 +136,8 @@ def main() -> None:
     ap.add_argument("--dataset", default=None, help="dataset dir (default characters/<id>/dataset)")
     ap.add_argument("--steps", type=int, default=2000)
     ap.add_argument("--rank", type=int, default=16)
+    ap.add_argument("--sample-every", type=int, default=250, help="write preview images every N steps -> <out>/samples/")
+    ap.add_argument("--save-every", type=int, default=500, help="save a LoRA checkpoint every N steps (survives Colab drops)")
     a = ap.parse_args()
 
     trigger = a.trigger or a.character
@@ -154,7 +170,9 @@ def main() -> None:
     os.makedirs(out_dir, exist_ok=True)
     cfg_path = os.path.join(out_dir, f"{a.character}.yaml")
     with open(cfg_path, "w", encoding="utf-8") as fh:
-        fh.write(_CONFIG.format(name=a.character, out=out_dir, dataset=dataset, steps=a.steps, rank=a.rank))
+        fh.write(_CONFIG.format(name=a.character, out=out_dir, dataset=dataset, steps=a.steps,
+                                rank=a.rank, trigger=trigger,
+                                sample_every=a.sample_every, save_every=a.save_every))
     print(f"[train] config -> {cfg_path}  (trigger={trigger!r}, {len(imgs)} imgs, {a.steps} steps)")
     sh(VENV_PY, "run.py", cfg_path, cwd=AI_TOOLKIT)
 
