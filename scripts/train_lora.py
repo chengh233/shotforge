@@ -95,7 +95,10 @@ def main() -> None:
     if not os.path.isfile(VENV_PY):
         sh(sys.executable, "-m", "venv", "--system-site-packages", VENV)
         sh(VENV_PY, "-m", "pip", "install", "-q", "-U", "pip")
-        sh(VENV_PY, "-m", "pip", "install", "-q", "-r", os.path.join(AI_TOOLKIT, "requirements.txt"))
+    # Always (re)install deps — a half-built venv from an earlier run can miss some
+    # (e.g. python-dotenv, which ai-toolkit's run.py imports). Cheap if already satisfied.
+    sh(VENV_PY, "-m", "pip", "install", "-q", "-r", os.path.join(AI_TOOLKIT, "requirements.txt"))
+    sh(VENV_PY, "-m", "pip", "install", "-q", "python-dotenv")
 
     out_dir = os.path.join("/content", f"lora_out_{a.character}")
     os.makedirs(out_dir, exist_ok=True)
