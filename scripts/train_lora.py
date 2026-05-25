@@ -68,6 +68,25 @@ def sh(*cmd: str, **kw) -> None:
     subprocess.run(list(cmd), check=True, **kw)
 
 
+def _ensure_pip(venv_py: str) -> None:
+    """Make `venv_py -m pip` usable. Debian/Colab's split python often ships without
+    ensurepip, so a venv it creates has no pip at all ("No module named pip", then
+    "No module named ensurepip"). Try ensurepip, then fall back to get-pip.py."""
+    if subprocess.run([venv_py, "-m", "pip", "--version"], capture_output=True).returncode == 0:
+        return
+    try:
+        sh(venv_py, "-m", "ensurepip", "--upgrade")
+        return
+    except subprocess.CalledProcessError:
+        pass
+    import tempfile
+    import urllib.request
+    getpip = os.path.join(tempfile.gettempdir(), "get-pip.py")
+    print("[train] no pip/ensurepip in venv — bootstrapping via get-pip.py")
+    urllib.request.urlretrieve("https://bootstrap.pypa.io/get-pip.py", getpip)
+    sh(venv_py, getpip)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Train a FLUX character LoRA with ai-toolkit.")
     ap.add_argument("--character", required=True, help="character id (characters/<id>)")
@@ -97,7 +116,7 @@ def main() -> None:
     # Guarantee pip exists *inside* the venv first — a half-built venv from an earlier run
     # can lack it ("No module named pip"); ensurepip bootstraps it. Then (re)install deps
     # every run (notably python-dotenv, which ai-toolkit's run.py imports). Cheap if satisfied.
-    sh(VENV_PY, "-m", "ensurepip", "--upgrade")
+    _ensure_pip(VENV_PY)
     sh(VENV_PY, "-m", "pip", "install", "-q", "-U", "pip")
     sh(VENV_PY, "-m", "pip", "install", "-q", "-r", os.path.join(AI_TOOLKIT, "requirements.txt"))
     sh(VENV_PY, "-m", "pip", "install", "-q", "python-dotenv")
