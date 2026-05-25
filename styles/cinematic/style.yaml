@@ -1,0 +1,10 @@
+# 画风库条目 —— 真人电影预告片质感（写实、非动漫）。剧本里用 `style: cinematic`。
+name: 电影预告片
+# positive：写实电影感（出图：Qwen/FLUX/SDXL 都吃这套英文电影术语）
+positive: "photorealistic cinematic film still, dramatic moody lighting, shallow depth of field, anamorphic lens, subtle film grain, teal-and-orange color grade, high dynamic range, 35mm, epic atmosphere, highly detailed"
+# negative：排除动漫/CG，保证真人写实
+negative: "anime, cartoon, illustration, 3d render, cgi, plastic skin, lowres, deformed, extra fingers, bad hands, watermark, text, jpeg artifacts"
+# video_suffix：拼到 Wan 运动提示词（中文）
+video_suffix: "电影预告片质感，真实电影感，戏剧性光影，浅景深"
+ref: null
+lora: null
