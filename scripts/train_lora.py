@@ -87,6 +87,26 @@ def _ensure_pip(venv_py: str) -> None:
     sh(venv_py, getpip)
 
 
+def _ensure_torchaudio(venv_py: str) -> None:
+    """ai-toolkit imports torchaudio at startup; Colab's system torch (seen via
+    --system-site-packages) may not ship it. Install a torchaudio matching the venv's
+    torch (same version + CUDA build), --no-deps so it can't drag in a different torch."""
+    if subprocess.run([venv_py, "-c", "import torchaudio"], capture_output=True).returncode == 0:
+        return
+    info = subprocess.run(
+        [venv_py, "-c", "import torch;print(torch.__version__.split('+')[0]);print(torch.version.cuda or '')"],
+        capture_output=True, text=True)
+    parts = info.stdout.split()
+    if not parts:
+        sh(venv_py, "-m", "pip", "install", "-q", "torchaudio")  # no torch to match — let pip pick
+        return
+    ver = parts[0]
+    cu = parts[1] if len(parts) > 1 else ""
+    idx = f"https://download.pytorch.org/whl/cu{cu.replace('.', '')}" if cu else "https://download.pytorch.org/whl/cpu"
+    print(f"[train] installing torchaudio=={ver} (torch CUDA={cu or 'cpu'}) for ai-toolkit")
+    sh(venv_py, "-m", "pip", "install", "-q", f"torchaudio=={ver}", "--index-url", idx, "--no-deps")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Train a FLUX character LoRA with ai-toolkit.")
     ap.add_argument("--character", required=True, help="character id (characters/<id>)")
@@ -120,6 +140,7 @@ def main() -> None:
     sh(VENV_PY, "-m", "pip", "install", "-q", "-U", "pip")
     sh(VENV_PY, "-m", "pip", "install", "-q", "-r", os.path.join(AI_TOOLKIT, "requirements.txt"))
     sh(VENV_PY, "-m", "pip", "install", "-q", "python-dotenv")
+    _ensure_torchaudio(VENV_PY)
 
     out_dir = os.path.join("/content", f"lora_out_{a.character}")
     os.makedirs(out_dir, exist_ok=True)
