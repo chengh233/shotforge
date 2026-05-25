@@ -10,8 +10,9 @@ docs/STAGES.md.
                 python run.py post   projects/example [--music bgm.mp3]
                 python run.py stitch projects/example   # silent concat only
 
-`setup` installs/starts ComfyUI + Wan models and verifies them (scripts/colab_setup.py).
-The other stages just call the matching Python module.
+`setup` (Colab, one command): ComfyUI + Wan models (colab_setup.py) + Qwen-Image models
+(qwen_setup.py) + a background cloudflared tunnel that prints the ComfyUI GUI URL
+(tunnel.py). The other stages just call the matching Python module.
 """
 from __future__ import annotations
 
@@ -38,7 +39,9 @@ def main() -> None:
     stage, rest = sys.argv[1], sys.argv[2:]
 
     if stage == "setup":
-        run(PY, "scripts/colab_setup.py")
+        run(PY, "scripts/colab_setup.py")   # ComfyUI + Wan models + serve
+        run(PY, "scripts/qwen_setup.py")    # Qwen-Image models (default image engine)
+        run(PY, "scripts/tunnel.py")        # cloudflared tunnel (background) -> prints the GUI URL
         return
 
     if not rest:
