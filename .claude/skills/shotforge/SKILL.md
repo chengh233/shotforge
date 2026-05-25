@@ -15,6 +15,21 @@ You orchestrate the shotforge pipeline. The GPU runs **remotely** (Colab ComfyUI
 and outputs download automatically. Your job is to drive the commands AND pause at the
 human-decision checkpoints so the user reviews and decides.
 
+## Prompt strategy (your edge — read docs/PROMPTING.md)
+The video model is weak; **compensate with detailed, structured prompts.** When you
+author or refine a shot, EXPAND the user's brief into a full prompt:
+- **Frame/still** (`content`/`frame_prompt`, → Qwen/FLUX): 美学(光线+景别+机位+构图+色调) +
+  主体(具体外貌+神态) + 场景 + 风格. Be concretely specific (not "a girl" but her
+  hair/eyes/outfit). Style comes from `style:` — don't repeat it.
+- **Motion** (`prompt`/`action` + `camera`, → Wan I2V): the frame fixes the look, so write
+  **运镜 + 一个清晰的主运动（节奏副词 + 强度 + 物理效果）**. One primary motion; pace adverbs
+  (缓缓/迅速); physical effects (发丝飘动/热气/水花); NO contradictions; don't re-describe the
+  static look; slow fast motion (cuts carry speed, not violent in-clip motion).
+- Pull from the vocab palette in docs/PROMPTING.md (lighting / shot size / angle / lens /
+  composition / camera move / motion verbs).
+- Language: Wan motion = 中文 OK; Qwen still = 中文 OK; FLUX/FLUX-LoRA still = English better.
+- When the user gives feedback, rewrite the shot's prompt richly per this, then regenerate.
+
 ## 0. Preconditions (check, don't assume)
 - `$COMFY_URL` must point at the Colab cloudflared tunnel (else frames/video hit a dead
   local ComfyUI). If unset, ask the user for the tunnel URL (or to run `python run.py
