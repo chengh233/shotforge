@@ -15,6 +15,7 @@ the venv + command are printed so you can rerun/adjust by hand.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 
@@ -45,15 +46,42 @@ def _ensure_pip(py: str) -> None:
     sh(py, g)
 
 
+def _python310() -> str:
+    """LatentSync's pinned deps (mediapipe 0.10.11, decord 0.6.0, insightface …) only have
+    wheels for py3.10. This box is py3.12, so provision python3.10 (deadsnakes) for the venv."""
+    p = shutil.which("python3.10")
+    if p:
+        return p
+    print("[latentsync] box is py3.12 but LatentSync's deps target 3.10 — installing python3.10")
+    sh("bash", "-c",
+       "apt-get -qq update && apt-get -qq install -y software-properties-common && "
+       "add-apt-repository -y ppa:deadsnakes/ppa && apt-get -qq update && "
+       "apt-get -qq install -y python3.10 python3.10-venv")
+    p = shutil.which("python3.10")
+    if not p:
+        raise SystemExit("[latentsync] couldn't install python3.10 — install it manually and rerun")
+    return p
+
+
+def _is_py310(venv_py: str) -> bool:
+    if not os.path.isfile(venv_py):
+        return False
+    out = subprocess.run([venv_py, "-c", "import sys;print('%d.%d' % sys.version_info[:2])"],
+                         capture_output=True, text=True)
+    return out.stdout.strip() == "3.10"
+
+
 def main() -> None:
     if not os.path.isfile(os.path.join(LS, "scripts", "inference.py")):
         sh("git", "clone", "--depth", "1", "https://github.com/bytedance/LatentSync", LS)
-    if not os.path.isfile(VENV_PY):
-        # clean venv (no --system-site-packages): LatentSync pins its own torch/xformers,
-        # which would clash with the box's nightly torch if shared.
-        # --without-pip: this box's python has no ensurepip, so venv creation would otherwise
-        # abort trying to bootstrap pip; we add pip ourselves via get-pip.py (_ensure_pip).
-        sh(sys.executable, "-m", "venv", "--without-pip", VENV)
+    # (Re)create the venv with python3.10 if it's missing or built with the wrong python.
+    # Clean venv (no --system-site-packages): LatentSync pins its own torch/xformers.
+    # --without-pip then get-pip.py, so we don't depend on ensurepip being present.
+    if not _is_py310(VENV_PY):
+        py310 = _python310()
+        if os.path.isdir(VENV):
+            shutil.rmtree(VENV, ignore_errors=True)
+        sh(py310, "-m", "venv", "--without-pip", VENV)
     _ensure_pip(VENV_PY)
     sh(VENV_PY, "-m", "pip", "install", "-q", "-U", "pip")
     sh(VENV_PY, "-m", "pip", "install", "-q", "-r", os.path.join(LS, "requirements.txt"))
