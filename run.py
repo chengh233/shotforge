@@ -26,6 +26,7 @@ PY = sys.executable
 USAGE = ("usage: python run.py <setup|genref|train|frames|verify|manga|video|dub|subs|lipsync|post|stitch> "
          "[project|character] [extra args]\n"
          "  frames/video/lipsync go through shotforge.pipeline (compose + pluggable engines)\n"
+         "  setup [--comfy-only]: full GPU setup, or just install+serve ComfyUI (skip Wan/Qwen models)\n"
          "  set COMFY_URL=<cloudflared url> to drive a remote Colab ComfyUI from your Mac")
 
 
@@ -40,6 +41,12 @@ def main() -> None:
     stage, rest = sys.argv[1], sys.argv[2:]
 
     if stage == "setup":
+        # `--comfy-only`: install + serve ComfyUI (+ tunnel) and skip the heavy Wan/Qwen
+        # model downloads — e.g. when you only need the GUI to test a LoRA.
+        if "--comfy-only" in sys.argv[2:]:
+            run(PY, "scripts/colab_setup.py", "--comfy-only")
+            run(PY, "scripts/tunnel.py")
+            return
         run(PY, "scripts/colab_setup.py")   # ComfyUI + Wan models + serve
         run(PY, "scripts/qwen_setup.py")    # Qwen-Image models (default image engine)
         run(PY, "scripts/tunnel.py")        # cloudflared tunnel (background) -> prints the GUI URL

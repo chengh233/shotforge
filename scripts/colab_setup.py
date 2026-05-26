@@ -93,9 +93,9 @@ def restart_comfyui() -> None:
     )
 
 
-def wait_until_models_visible(timeout: float = 300.0) -> None:
-    """Block until ComfyUI answers AND lists every model we downloaded."""
-    wanted = {url.rsplit("/", 1)[-1] for _, url, _ in MODELS}
+def wait_until_models_visible(wanted: set[str], timeout: float = 300.0) -> None:
+    """Block until ComfyUI answers AND lists every model in `wanted`. Pass an empty set
+    to just wait for the server to come up (used by --comfy-only)."""
     url = f"http://127.0.0.1:{PORT}/object_info"
     deadline = time.time() + timeout
     missing = wanted
@@ -105,6 +105,9 @@ def wait_until_models_visible(timeout: float = 300.0) -> None:
         except Exception:
             time.sleep(2)
             continue
+        if not wanted:
+            print(f"[setup] ✅ ComfyUI up on :{PORT}")
+            return
         seen: set[str] = set()
         for node in info.values():
             req = node.get("input", {}).get("required", {})
@@ -117,15 +120,29 @@ def wait_until_models_visible(timeout: float = 300.0) -> None:
             print(f"[setup] next: python -m shotforge.generate --project projects/example --engine comfy --shot s1")
             return
         time.sleep(2)
-    print(f"[setup] ⚠️ ComfyUI up but these models aren't visible: {sorted(missing)}")
+    if not wanted:
+        print(f"[setup] ⚠️ ComfyUI didn't answer on :{PORT} within {timeout:.0f}s — see /content/comfyui.log")
+    else:
+        print(f"[setup] ⚠️ ComfyUI up but these models aren't visible: {sorted(missing)}")
     print("[setup] last log lines:")
     sh("tail -n 25 /content/comfyui.log || true")
     sys.exit(1)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    import argparse
+    ap = argparse.ArgumentParser(description="ComfyUI (+ Wan 2.2 I2V models) setup for a Colab GPU box.")
+    ap.add_argument("--comfy-only", action="store_true",
+                    help="install + serve ComfyUI only; skip the Wan model downloads")
+    a = ap.parse_args()
     clone_comfyui()
     install_deps()
-    download_models()
+    if not a.comfy_only:
+        download_models()
     restart_comfyui()
-    wait_until_models_visible()
+    wanted = set() if a.comfy_only else {url.rsplit("/", 1)[-1] for _, url, _ in MODELS}
+    wait_until_models_visible(wanted)
+
+
+if __name__ == "__main__":
+    main()
