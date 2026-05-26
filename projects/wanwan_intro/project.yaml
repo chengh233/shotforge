@@ -1,31 +1,50 @@
-# 晚晚的自我介绍（单人 · 配音 · 对口型）
+# 晚晚的自我介绍（单人 · 配音 · 对口型 · 轻微动作）
 #
-# 最简的"说话头"链路，先验证「配音 + 口型对」能跑通：
-#   1) 用 wanwan LoRA 在 ComfyUI GUI 出一张正脸说话的图 -> 存到 frames/s1.jpeg
-#   2) tools.dub 用晚晚的声音把 dialogue 配成 out/audio/s1.mp3
-#   3) 把图按配音时长撑成一段静态视频 out/s1.mp4（tools.still_clip）
-#   4) LatentSync 对口型 -> out/s1.synced.mp4
-#   5) tools.post 合成（字幕 + 配音）-> out/<title>_final.mp4
-# 之后想更生动，再换成 Wan I2V 轻微动作 + 对口型（每句拆 ≤5s 的多镜）。
+# 升级版："静态说话头" → 用 Wan I2V 给每镜加轻微动作（点头/眨眼/发丝/呼吸感），
+# 再叠 LatentSync 对口型。Wan 每段约 5 秒，所以把自我介绍拆成 3 个短句/镜头。
+# 流程：frames(FLUX+wanwan LoRA) -> video(Wan I2V) -> dub -> lipsync -> post
+#   注意：用了 Wan 就不再走 stillclip（Wan 直接产出 out/<id>.mp4）。
 title: 晚晚自我介绍
-fps: 25                  # 说话头用 25fps（LatentSync 常用）
+fps: 16                  # Wan 的训练帧率
 
 engines:
-  image: flux            # 角色用 wanwan LoRA 出图（当前在 GUI 手动出，存到 frames/）
-  lipsync: latentsync
+  image: flux            # wanwan LoRA 出帧
+  video: wan             # Wan I2V 给静帧加轻微动作
+  lipsync: latentsync    # 把嘴对到配音
 
-cast: {S: wanwan}        # 单人：角色 S = 晚晚（语音 zh-CN-XiaoyiNeural 来自 character.yaml）
+cast: {S: wanwan}        # 单人：S = 晚晚（语音 zh-CN-XiaoyiNeural）
 
 defaults:
   seconds: 5
+  steps: 20
   seed: 0
+  negative: "最差质量，低质量，多余的手指，畸形的手，畸形的脸，字幕，文字，水印，多人，畸形，剧烈运动"
 
 shots:
+  # 每句台词都很短（≤~4s 语音），稳稳落在 Wan 的 5s 片段里。
+  # content=FLUX 出帧（英文；compose 自动加 wanwan 触发词）；action=Wan 运动（中文）。
+  # 嘴型之后由 LatentSync 重做，所以 action 里不强调"说话"，只加轻微的头/眼/发丝动作。
   - id: s1
     frame: frames/s1.jpeg
+    camera: static
     subjects: [S]
-    speaker: S            # 说话人在镜头里 + 有台词 -> 会触发对口型
-    # FLUX 吃英文更好；compose 会自动在最前面加上 LoRA 触发词 wanwan，这里不用再写。
-    # 正脸、脸清晰、嘴部不被遮挡 -> 利于对口型。
-    content: "a photorealistic half-body portrait of a young woman in her early twenties with long black hair, looking straight at the camera, gentle warm smile, lips slightly parted as if about to speak, soft cream knit sweater, cozy home interior with warm lamp light, blurred background, eye-level, 50mm, shallow depth of field, highly detailed"
-    dialogue: "大家好，我叫晚晚。很高兴在这里见到你。平时我喜欢安安静静地看看书、喝点茶，也喜欢和朋友聊聊天。希望以后，我们能慢慢成为好朋友。"
+    speaker: S
+    content: "a photorealistic half-body portrait of a young woman with long black hair, looking straight at the camera, gentle warm smile, lips slightly parted, soft cream knit sweater, cozy home with warm lamp light, blurred background, eye-level, 50mm, shallow depth of field, highly detailed"
+    action: "晚晚轻轻点头、眼神看向镜头，自然地眨一下眼，发丝和肩膀有细微起伏的呼吸感；动作幅度很小、缓慢自然"
+    dialogue: "大家好，我叫晚晚，很高兴见到你。"
+  - id: s2
+    frame: frames/s2.jpeg
+    camera: push_in
+    subjects: [S]
+    speaker: S
+    content: "a photorealistic chest-up portrait of the same young woman with long black hair, slight three-quarter angle facing the camera, soft natural smile, cream knit sweater, cozy warm-lit home interior, blurred background, 50mm, shallow depth of field, highly detailed"
+    action: "镜头极缓慢推近；晚晚微微转头看向镜头、轻轻眨眼，嘴角上扬，发丝轻动；动作很小、自然"
+    dialogue: "平时我喜欢看看书、喝喝茶。"
+  - id: s3
+    frame: frames/s3.jpeg
+    camera: static
+    subjects: [S]
+    speaker: S
+    content: "a photorealistic medium portrait of the same young woman with long black hair, facing the camera, warm gentle smile, cream knit sweater, cozy warm-lit home, blurred background, eye-level, 50mm, shallow depth of field, highly detailed"
+    action: "晚晚轻轻点头、温柔地看向镜头微笑，自然眨眼，发丝微微飘动；动作幅度很小、缓慢"
+    dialogue: "希望我们能慢慢成为好朋友。"
