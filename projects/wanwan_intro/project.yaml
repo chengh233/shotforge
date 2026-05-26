@@ -1,0 +1,29 @@
+# 晚晚的自我介绍（单人 · 配音 · 对口型）
+#
+# 最简的"说话头"链路，先验证「配音 + 口型对」能跑通：
+#   1) 用 wanwan LoRA 在 ComfyUI GUI 出一张正脸说话的图 -> 存到 frames/s1.jpeg
+#   2) tools.dub 用晚晚的声音把 dialogue 配成 out/audio/s1.mp3
+#   3) 把图按配音时长撑成一段静态视频 out/s1.mp4（tools.still_clip）
+#   4) LatentSync 对口型 -> out/s1.synced.mp4
+#   5) tools.post 合成（字幕 + 配音）-> out/<title>_final.mp4
+# 之后想更生动，再换成 Wan I2V 轻微动作 + 对口型（每句拆 ≤5s 的多镜）。
+title: 晚晚自我介绍
+fps: 25                  # 说话头用 25fps（LatentSync 常用）
+
+engines:
+  image: flux            # 角色用 wanwan LoRA 出图（当前在 GUI 手动出，存到 frames/）
+  lipsync: latentsync
+
+cast: {S: wanwan}        # 单人：角色 S = 晚晚（语音 zh-CN-XiaoyiNeural 来自 character.yaml）
+
+defaults:
+  seconds: 5
+  seed: 0
+
+shots:
+  - id: s1
+    frame: frames/s1.jpeg
+    subjects: [S]
+    speaker: S            # 说话人在镜头里 + 有台词 -> 会触发对口型
+    content: "写实风格：晚晚正对镜头的半身像，正脸清晰、神情自然温和，嘴唇放松、微微张开像正要开口说话；居家暖色光，浅景深，背景柔焦虚化。"
+    dialogue: "大家好，我叫晚晚。很高兴在这里见到你。平时我喜欢安安静静地看看书、喝点茶，也喜欢和朋友聊聊天。希望以后，我们能慢慢成为好朋友。"

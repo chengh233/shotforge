@@ -23,7 +23,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 
-USAGE = ("usage: python run.py <setup|genref|train|frames|verify|manga|video|dub|subs|lipsync|post|stitch> "
+USAGE = ("usage: python run.py <setup|genref|train|frames|verify|manga|video|stillclip|dub|subs|lipsync|post|stitch> "
          "[project|character] [extra args]\n"
          "  frames/video/lipsync go through shotforge.pipeline (compose + pluggable engines)\n"
          "  setup [--comfy-only|--flux]: full (ComfyUI+Wan+Qwen), ComfyUI-only, or ComfyUI+FLUX T2I models\n"
@@ -68,6 +68,8 @@ def main() -> None:
         run(PY, "scripts/train_lora.py", "--character", project, *extra)
     elif stage in ("frames", "video", "lipsync"):   # compose + pluggable engines
         run(PY, "-m", "shotforge.pipeline", stage, "--project", project, *extra)
+    elif stage == "stillclip":  # hold each frame for its voiceover length (talking-head, no Wan)
+        run(PY, "-m", "tools.still_clip", "--project", project, *extra)
     elif stage == "manga":  # assemble frames into a 条漫/storyboard page (read it as stills)
         run(PY, "-m", "tools.manga", "--project", project, *extra)
     elif stage == "verify":  # VLM checks each frame vs its intent (auto QA gate)

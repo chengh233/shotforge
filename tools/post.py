@@ -71,8 +71,10 @@ def main() -> None:
     adir = os.path.join(outdir, "audio")
     final = args.out or os.path.join(outdir, f"{project.name}_final.mp4")
 
-    clips = [(s, os.path.join(outdir, f"{s.id}.mp4")) for s in project.shots
-             if os.path.isfile(os.path.join(outdir, f"{s.id}.mp4"))]
+    def _clip(s):   # prefer the lip-synced clip when lipsync has run
+        synced = os.path.join(outdir, f"{s.id}.synced.mp4")
+        return synced if os.path.isfile(synced) else os.path.join(outdir, f"{s.id}.mp4")
+    clips = [(s, _clip(s)) for s in project.shots if os.path.isfile(_clip(s))]
     if not clips:
         print("[error] no clips in out/; render first")
         return
