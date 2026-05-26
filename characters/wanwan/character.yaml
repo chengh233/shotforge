@@ -6,5 +6,5 @@ personality: "温柔、文静、亲切"
 tone: "轻声细语、自然"
 voice: zh-CN-XiaoyiNeural   # 年轻女声
 ref: base.jpeg               # 参考图（base 图即可放这）
-lora: null                 # 训好后填 wanwan.safetensors（python run.py train wanwan 会放到 ComfyUI/models/loras/）
+lora: wanwan.safetensors   # 已训好（在 ComfyUI/models/loras/）；flux 引擎出图自动加载 + 用 lora_trigger 激活
 lora_trigger: wanwan       # 提示词触发词（数据集 caption + 出图都用它）

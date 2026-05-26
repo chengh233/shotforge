@@ -57,12 +57,17 @@ def build_image_spec(project: Project, shot: Shot) -> ImageSpec:
             el = project.cast_elements.get(role)
             if not el:
                 raise SystemExit(f"[compose] {shot.id} 的 subject '{role}' 不在 cast 里")
-            if el.prompt:
-                parts.append(el.prompt)
-            if el.ref:
-                refs.append(_require(el.ref, f"角色 {role} 的参考图"))
             if el.lora:
+                # a trained LoRA carries the identity -> activate it with the trigger word
+                # and skip the text appearance + face ref (those are for ref-conditioned engines)
                 loras.append(Lora(os.path.basename(el.lora), el.lora_trigger))
+                if el.lora_trigger:
+                    parts.append(el.lora_trigger)
+            else:
+                if el.prompt:
+                    parts.append(el.prompt)
+                if el.ref:
+                    refs.append(_require(el.ref, f"角色 {role} 的参考图"))
         if project.scene_ref:                            # the set
             refs.append(_require(project.scene_ref, "场景参考图"))
         parts += [shot.frame_prompt, project.style_positive]
@@ -76,6 +81,8 @@ def build_image_spec(project: Project, shot: Shot) -> ImageSpec:
             glue = g.get("scene_only", "")
         else:
             glue = ""
+        if not refs:
+            glue = ""   # pure text-to-image / LoRA: no reference image -> ref-relative glue is moot
 
     prompt = "，".join(p for p in parts if p and p.strip())
     prompt = f"{prompt}。{glue}{g.get('aspect', '')}"

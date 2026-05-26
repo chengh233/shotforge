@@ -25,5 +25,7 @@ shots:
     frame: frames/s1.jpeg
     subjects: [S]
     speaker: S            # 说话人在镜头里 + 有台词 -> 会触发对口型
-    content: "写实风格：晚晚正对镜头的半身像，正脸清晰、神情自然温和，嘴唇放松、微微张开像正要开口说话；居家暖色光，浅景深，背景柔焦虚化。"
+    # FLUX 吃英文更好；compose 会自动在最前面加上 LoRA 触发词 wanwan，这里不用再写。
+    # 正脸、脸清晰、嘴部不被遮挡 -> 利于对口型。
+    content: "a photorealistic half-body portrait of a young woman in her early twenties with long black hair, looking straight at the camera, gentle warm smile, lips slightly parted as if about to speak, soft cream knit sweater, cozy home interior with warm lamp light, blurred background, eye-level, 50mm, shallow depth of field, highly detailed"
     dialogue: "大家好，我叫晚晚。很高兴在这里见到你。平时我喜欢安安静静地看看书、喝点茶，也喜欢和朋友聊聊天。希望以后，我们能慢慢成为好朋友。"

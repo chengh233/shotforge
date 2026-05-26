@@ -1,0 +1,142 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "194:51",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "194:48": {
+    "inputs": {
+      "width": 832,
+      "height": 1216,
+      "batch_size": 1
+    },
+    "class_type": "EmptySD3LatentImage",
+    "_meta": {
+      "title": "EmptySD3LatentImage"
+    }
+  },
+  "194:50": {
+    "inputs": {
+      "seed": 958964886159654,
+      "steps": 20,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "194:195",
+        0
+      ],
+      "positive": [
+        "194:49",
+        0
+      ],
+      "negative": [
+        "194:52",
+        0
+      ],
+      "latent_image": [
+        "194:48",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "194:51": {
+    "inputs": {
+      "samples": [
+        "194:50",
+        0
+      ],
+      "vae": [
+        "194:45",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "194:52": {
+    "inputs": {
+      "conditioning": [
+        "194:49",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "194:45": {
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "194:47": {
+    "inputs": {
+      "clip_name1": "clip_l.safetensors",
+      "clip_name2": "t5xxl_fp16.safetensors",
+      "type": "flux",
+      "device": "default"
+    },
+    "class_type": "DualCLIPLoader",
+    "_meta": {
+      "title": "DualCLIPLoader"
+    }
+  },
+  "194:46": {
+    "inputs": {
+      "unet_name": "flux1-dev.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "194:195": {
+    "inputs": {
+      "lora_name": "wanwan.safetensors",
+      "strength_model": 0.9,
+      "model": [
+        "194:46",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "194:49": {
+    "inputs": {
+      "text": "wanwan, photorealistic portrait, a young woman in her early twenties with long black hair, relaxed at home in a soft oversized sweater, holding a cup of tea, sitting on a sofa near a window at dusk, warm lamp light, gentle smile, upper\n  body, eye-level, 50mm, shallow depth of field, highly detailed",
+      "clip": [
+        "194:47",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  }
+}
