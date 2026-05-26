@@ -91,7 +91,8 @@ def main() -> None:
     os.makedirs(ckpt, exist_ok=True)
     if not os.path.isfile(os.path.join(ckpt, "latentsync_unet.pt")):
         print("[latentsync] downloading checkpoints (~5GB) from ByteDance/LatentSync-1.5")
-        sh(VENV_PY, "-m", "pip", "install", "-q", "-U", "huggingface_hub")
+        # NOTE: don't `-U huggingface_hub` — the pinned 0.30.2 already has snapshot_download,
+        # and upgrading to 1.x breaks transformers 4.48.0 / tokenizers (need hub <1.0).
         sh(VENV_PY, "-c",
            "from huggingface_hub import snapshot_download as d; "
            f"d('ByteDance/LatentSync-1.5', local_dir={ckpt!r}, "
