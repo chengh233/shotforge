@@ -40,6 +40,7 @@ def run_frames(project_dir, engine=None, shot=None, variations=1, overwrite=Fals
                 continue
             spec = compose.build_image_spec(project, s)
             spec.out = out
+            os.makedirs(os.path.dirname(out), exist_ok=True)
             tag = "" if variations <= 1 else f" v{v + 1}"
             print(f"[frames] {s.id}{tag} | subjects={s.subjects or '—'} | refs={len(spec.refs)} | loras={len(spec.loras)} -> {out}")
             eng.generate(spec)
