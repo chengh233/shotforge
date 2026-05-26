@@ -51,7 +51,9 @@ def main() -> None:
     if not os.path.isfile(VENV_PY):
         # clean venv (no --system-site-packages): LatentSync pins its own torch/xformers,
         # which would clash with the box's nightly torch if shared.
-        sh(sys.executable, "-m", "venv", VENV)
+        # --without-pip: this box's python has no ensurepip, so venv creation would otherwise
+        # abort trying to bootstrap pip; we add pip ourselves via get-pip.py (_ensure_pip).
+        sh(sys.executable, "-m", "venv", "--without-pip", VENV)
     _ensure_pip(VENV_PY)
     sh(VENV_PY, "-m", "pip", "install", "-q", "-U", "pip")
     sh(VENV_PY, "-m", "pip", "install", "-q", "-r", os.path.join(LS, "requirements.txt"))

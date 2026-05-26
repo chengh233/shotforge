@@ -156,7 +156,9 @@ def main() -> None:
     if not os.path.isfile(os.path.join(AI_TOOLKIT, "run.py")):
         sh("git", "clone", "--depth", "1", "https://github.com/ostris/ai-toolkit", AI_TOOLKIT)
     if not os.path.isfile(VENV_PY):
-        sh(sys.executable, "-m", "venv", "--system-site-packages", VENV)
+        # --without-pip: this box's python has no ensurepip, so venv creation would abort
+        # trying to bootstrap pip; _ensure_pip adds it via get-pip.py right after.
+        sh(sys.executable, "-m", "venv", "--system-site-packages", "--without-pip", VENV)
     # Guarantee pip exists *inside* the venv first — a half-built venv from an earlier run
     # can lack it ("No module named pip"); ensurepip bootstraps it. Then (re)install deps
     # every run (notably python-dotenv, which ai-toolkit's run.py imports). Cheap if satisfied.
