@@ -78,8 +78,14 @@ def main() -> None:
         sh(py310, "-m", "venv", "--without-pip", VENV)
     _ensure_pip(VENV_PY)
     sh(VENV_PY, "-m", "pip", "install", "-U", "pip")
+    # openai-whisper==20231117 fails to build its wheel here; the latest builds fine and
+    # works for CosyVoice's tokenizer. Loosen that pin into a patched requirements file.
+    req = os.path.join(CV, "requirements.txt")
+    text = open(req, encoding="utf-8").read().replace("openai-whisper==20231117", "openai-whisper")
+    patched = os.path.join(CV, "requirements.shotforge.txt")
+    open(patched, "w", encoding="utf-8").write(text)
     # not -q: this pulls torch (looks "stuck" when silent)
-    sh(VENV_PY, "-m", "pip", "install", "-r", os.path.join(CV, "requirements.txt"))
+    sh(VENV_PY, "-m", "pip", "install", "-r", patched)
 
     if not (os.path.isdir(MODEL) and os.listdir(MODEL)):
         print("[cosyvoice] downloading CosyVoice-300M-SFT from ModelScope")
