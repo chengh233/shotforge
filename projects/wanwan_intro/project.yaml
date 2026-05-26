@@ -7,9 +7,11 @@ fps: 16                  # Wan 的训练帧率
 
 engines:
   image: flux            # wanwan LoRA 出帧
-  video: wan             # Wan I2V 给静帧加轻微动作
-  lipsync: latentsync    # 把嘴对到配音
   voice: cosyvoice       # 自然中文女声（预设「中文女」）；没装时退回 edge-tts 删掉这行即可
+  talk: sonic            # 图+音频 一次出「动作+口型」（取代 Wan+LatentSync 两段式）
+  # 旧的两段式引擎（如想回退到 video+lipsync 再用）：
+  video: wan
+  lipsync: latentsync
 
 cast: {S: wanwan}        # 单人：S = 晚晚（语音 zh-CN-XiaoyiNeural）
 

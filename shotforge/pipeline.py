@@ -106,9 +106,40 @@ def run_lipsync(project_dir, engine=None, shot=None):
     print(f"[ok] lipsync done ({n} shots)")
 
 
+def run_talk(project_dir, engine=None, shot=None):
+    """One-pass audio-driven talking head (Sonic): a still frame + its voice audio ->
+    a clip with coordinated head motion + lip sync. Replaces video + lipsync for talking
+    shots. Writes out/<id>.mp4 and clears any stale out/<id>.synced.mp4."""
+    project = load_project(project_dir)
+    name = engine or project.engines.get("talk", "sonic")
+    eng = get_engine("talk", name)
+    outdir = os.path.join(project_dir, "out")
+    os.makedirs(outdir, exist_ok=True)
+    n = 0
+    for s in project.shots:
+        if shot and s.id != shot:
+            continue
+        speaking = s.dialogue.strip() and s.speaker in s.subjects
+        audio = os.path.join(outdir, "audio", f"{s.id}.mp3")
+        if not speaking:
+            print(f"[skip] {s.id}: 非说话镜（talk 只处理在镜说话的镜头）")
+            continue
+        if not (os.path.isfile(s.frame) and os.path.isfile(audio)):
+            print(f"[skip] {s.id}: 需要 {s.frame} + {audio}（先跑 frames & dub）")
+            continue
+        out = os.path.join(outdir, f"{s.id}.mp4")
+        print(f"[talk] {s.id}: {s.frame} + {audio} -> {out}")
+        eng.generate(frame=s.frame, audio=audio, out=out, seconds=s.seconds, fps=project.fps, seed=s.seed)
+        stale = os.path.join(outdir, f"{s.id}.synced.mp4")  # drop old two-stage output so post uses this
+        if os.path.isfile(stale):
+            os.remove(stale)
+        n += 1
+    print(f"[ok] talk done ({n} shots)")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="shotforge stage runner (compose + engines).")
-    ap.add_argument("stage", choices=("frames", "video", "lipsync"))
+    ap.add_argument("stage", choices=("frames", "video", "lipsync", "talk"))
     ap.add_argument("--project", required=True)
     ap.add_argument("--engine", default=None)
     ap.add_argument("--shot", default=None)
@@ -119,6 +150,8 @@ def main() -> None:
         run_frames(a.project, a.engine, a.shot, a.variations, a.overwrite)
     elif a.stage == "video":
         run_video(a.project, a.engine, a.shot)
+    elif a.stage == "talk":
+        run_talk(a.project, a.engine, a.shot)
     else:
         run_lipsync(a.project, a.engine, a.shot)
 
