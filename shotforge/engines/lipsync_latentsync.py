@@ -31,7 +31,13 @@ class LatentSyncEngine:
                 "[lipsync] 未配置 lip-sync 命令。设 $LIPSYNC_CMD（含 {video}{audio}{out}）指向 "
                 "LatentSync/MuseTalk 等的推理脚本。\n  动漫脸效果有限——不开口型同步也能出片（旁白式）。"
             )
-        cmd = LIPSYNC_CMD.format(video=shlex.quote(video), audio=shlex.quote(audio), out=shlex.quote(out))
+        # LIPSYNC_CMD often `cd`s into the model's repo (LatentSync etc.), so a relative
+        # video/audio/out path would resolve against the wrong dir — pass absolute paths.
+        cmd = LIPSYNC_CMD.format(
+            video=shlex.quote(os.path.abspath(video)),
+            audio=shlex.quote(os.path.abspath(audio)),
+            out=shlex.quote(os.path.abspath(out)),
+        )
         print(f"[lipsync] $ {cmd}")
         subprocess.run(cmd, shell=True, check=True)
 
