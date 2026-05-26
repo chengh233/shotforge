@@ -84,7 +84,8 @@ def main() -> None:
         sh(py310, "-m", "venv", "--without-pip", VENV)
     _ensure_pip(VENV_PY)
     sh(VENV_PY, "-m", "pip", "install", "-q", "-U", "pip")
-    sh(VENV_PY, "-m", "pip", "install", "-q", "-r", os.path.join(LS, "requirements.txt"))
+    # not -q: this pulls torch+cuda (several GB) and looks "stuck" when silent
+    sh(VENV_PY, "-m", "pip", "install", "-r", os.path.join(LS, "requirements.txt"))
 
     ckpt = os.path.join(LS, "checkpoints")
     os.makedirs(ckpt, exist_ok=True)
