@@ -9,6 +9,7 @@ engines:
   image: flux            # wanwan LoRA 出帧
   video: wan             # Wan I2V 给静帧加轻微动作
   lipsync: latentsync    # 把嘴对到配音
+  voice: cosyvoice       # 自然中文女声（预设「中文女」）；没装时退回 edge-tts 删掉这行即可
 
 cast: {S: wanwan}        # 单人：S = 晚晚（语音 zh-CN-XiaoyiNeural）
 

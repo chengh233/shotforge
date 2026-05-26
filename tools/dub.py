@@ -18,12 +18,12 @@ import argparse
 import asyncio
 import os
 
-import edge_tts
-
+from shotforge.engines.base import VoiceSpec, get_engine
 from shotforge.manifest import load_project
 
 
 async def _say(text: str, voice: str, path: str) -> None:
+    import edge_tts
     await edge_tts.Communicate(text, voice).save(path)
 
 
@@ -37,16 +37,25 @@ def main() -> None:
     adir = os.path.join(args.project, "out", "audio")
     os.makedirs(adir, exist_ok=True)
 
+    # A project can pick a higher-quality TTS engine (e.g. cosyvoice) via `engines: voice:`;
+    # default stays edge-tts (free, online, no GPU). --voice forces an edge voice (edge only).
+    eng_name = None if args.voice else project.engines.get("voice")
+    eng = get_engine("voice", eng_name) if eng_name and eng_name not in ("edge", "edge-tts") else None
+
     n = 0
     for shot in project.shots:
         if not shot.dialogue.strip():
             print(f"[skip] {shot.id}: no dialogue")
             continue
-        # per-shot speaker voice (multi-character): the speaking role's voice
-        voice = args.voice or project.voice_for(shot.speaker) or "zh-CN-XiaoxiaoNeural"
         path = os.path.join(adir, f"{shot.id}.mp3")
-        print(f"[tts] {shot.id} ({shot.speaker or '—'}/{voice}): {shot.dialogue!r} -> {path}")
-        asyncio.run(_say(shot.dialogue, voice, path))
+        if eng:
+            print(f"[tts] {shot.id} ({eng.name}): {shot.dialogue!r} -> {path}")
+            eng.say(VoiceSpec(text=shot.dialogue, out=path, voice=project.voice_for(shot.speaker)))
+        else:
+            # per-shot speaker voice (multi-character): the speaking role's voice
+            voice = args.voice or project.voice_for(shot.speaker) or "zh-CN-XiaoxiaoNeural"
+            print(f"[tts] {shot.id} ({shot.speaker or '—'}/{voice}): {shot.dialogue!r} -> {path}")
+            asyncio.run(_say(shot.dialogue, voice, path))
         n += 1
     print(f"[ok] {n} clips -> {adir}")
 
