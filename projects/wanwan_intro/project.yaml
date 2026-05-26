@@ -1,9 +1,7 @@
-# 晚晚的自我介绍（单人 · 配音 · 对口型 · 轻微动作）
+# 晚晚的自我介绍（单镜 · 5 秒 · 配音 · 对口型 · 轻微动作）
 #
-# 升级版："静态说话头" → 用 Wan I2V 给每镜加轻微动作（点头/眨眼/发丝/呼吸感），
-# 再叠 LatentSync 对口型。Wan 每段约 5 秒，所以把自我介绍拆成 3 个短句/镜头。
-# 流程：frames(FLUX+wanwan LoRA) -> video(Wan I2V) -> dub -> lipsync -> post
-#   注意：用了 Wan 就不再走 stillclip（Wan 直接产出 out/<id>.mp4）。
+# 流程：frames(FLUX+wanwan LoRA) -> video(Wan I2V 加轻微动作) -> dub -> lipsync -> post
+#   一句话台词，约 4–5 秒，正好落在 Wan 的 5s 片段里；嘴型由 LatentSync 重做。
 title: 晚晚自我介绍
 fps: 16                  # Wan 的训练帧率
 
@@ -18,33 +16,16 @@ defaults:
   seconds: 5
   steps: 20
   seed: 0
-  negative: "最差质量，低质量，多余的手指，畸形的手，畸形的脸，字幕，文字，水印，多人，畸形，剧烈运动"
+  negative: "最差质量，低质量，多余的手指，畸形的手，畸形的脸，闭眼，字幕，文字，水印，多人，剧烈运动，镜头剧烈晃动"
 
 shots:
-  # 每句台词都很短（≤~4s 语音），稳稳落在 Wan 的 5s 片段里。
-  # content=FLUX 出帧（英文；compose 自动加 wanwan 触发词）；action=Wan 运动（中文）。
-  # 嘴型之后由 LatentSync 重做，所以 action 里不强调"说话"，只加轻微的头/眼/发丝动作。
   - id: s1
     frame: frames/s1.jpeg
     camera: static
     subjects: [S]
     speaker: S
-    content: "a photorealistic half-body portrait of a young woman with long black hair, looking straight at the camera, gentle warm smile, lips slightly parted, soft cream knit sweater, cozy home with warm lamp light, blurred background, eye-level, 50mm, shallow depth of field, highly detailed"
-    action: "晚晚轻轻点头、眼神看向镜头，自然地眨一下眼，发丝和肩膀有细微起伏的呼吸感；动作幅度很小、缓慢自然"
-    dialogue: "大家好，我叫晚晚，很高兴见到你。"
-  - id: s2
-    frame: frames/s2.jpeg
-    camera: push_in
-    subjects: [S]
-    speaker: S
-    content: "a photorealistic chest-up portrait of the same young woman with long black hair, slight three-quarter angle facing the camera, soft natural smile, cream knit sweater, cozy warm-lit home interior, blurred background, 50mm, shallow depth of field, highly detailed"
-    action: "镜头极缓慢推近；晚晚微微转头看向镜头、轻轻眨眼，嘴角上扬，发丝轻动；动作很小、自然"
-    dialogue: "平时我喜欢看看书、喝喝茶。"
-  - id: s3
-    frame: frames/s3.jpeg
-    camera: static
-    subjects: [S]
-    speaker: S
-    content: "a photorealistic medium portrait of the same young woman with long black hair, facing the camera, warm gentle smile, cream knit sweater, cozy warm-lit home, blurred background, eye-level, 50mm, shallow depth of field, highly detailed"
-    action: "晚晚轻轻点头、温柔地看向镜头微笑，自然眨眼，发丝微微飘动；动作幅度很小、缓慢"
-    dialogue: "希望我们能慢慢成为好朋友。"
+    # 起始帧（FLUX，英文；compose 自动加 wanwan 触发词）。正脸、中近景、嘴部清晰不被遮挡，利于对口型。
+    content: "a photorealistic medium close-up portrait of a young woman with long black hair, fair clear skin, facing the camera at eye level, a gentle warm smile, lips slightly parted as if about to speak, soft natural makeup; wearing a cream knit sweater; seated in a cozy living room by a window, soft warm daylight, gently blurred background; 50mm lens, shallow depth of field, natural skin texture, highly detailed, photorealistic"
+    # Wan 运动（中文）：只加细微的生命感——一个缓慢主运动 + 物理细节；嘴型之后由 LatentSync 重做，所以不写"说话"。
+    action: "晚晚极轻微地缓缓点头，自然地眨了一下眼，几缕发丝随空气轻轻飘动，肩膀有细微的呼吸起伏；动作幅度很小、舒缓自然，画面整体平稳"
+    dialogue: "大家好，我叫晚晚，很高兴认识你。"
