@@ -86,6 +86,9 @@ def main() -> None:
     open(patched, "w", encoding="utf-8").write(text)
     # not -q: this pulls torch (looks "stuck" when silent)
     sh(VENV_PY, "-m", "pip", "install", "-r", patched)
+    # lightning/Matcha-TTS call pkg_resources.declare_namespace, but setuptools>=81 (which
+    # get-pip installs) dropped pkg_resources -> pin setuptools back so it exists.
+    sh(VENV_PY, "-m", "pip", "install", "setuptools<81")
 
     if not (os.path.isdir(MODEL) and os.listdir(MODEL)):
         print("[cosyvoice] downloading CosyVoice-300M-SFT from ModelScope")
